@@ -3,11 +3,11 @@ In pm4, hopper blocks were implemented to have an inventory. But the logic for p
 This plugin aims to add this logic to the hopper.
 
 ### TODOs
-- Pushing to specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox (not working as in vanilla).
-- Pulling from specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox.
-- Calling an event when a hopper moves an item between its own and another inventory. 
 - Optimizations
 - Customizations
+- Probably refactor `HopperTransferContainerEvent` and `HopperTransferJukeboxEvent`. Their implementation is not perfected.
+- Pushing to specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox (not working as in vanilla).
+- Pulling from specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox.
 
 ### FAQ
 #### What are your sources?

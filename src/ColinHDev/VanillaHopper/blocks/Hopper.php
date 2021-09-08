@@ -3,6 +3,8 @@
 namespace ColinHDev\VanillaHopper\blocks;
 
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
+use ColinHDev\VanillaHopper\events\HopperTransferContainerEvent;
+use ColinHDev\VanillaHopper\events\HopperTransferJukeboxEvent;
 use pocketmine\block\Hopper as PMMP_Hopper;
 use pocketmine\block\inventory\FurnaceInventory;
 use pocketmine\block\inventory\HopperInventory;
@@ -97,13 +99,17 @@ class Hopper extends PMMP_Hopper {
                     if(!$itemInFurnace->canStackWith($item)){
                         continue;
                     }
-                    $item->pop();
+                    $itemToPush = $item->pop();
                     $itemInFurnace->setCount($itemInFurnace->getCount() + 1);
                 }else{
-                    $itemInFurnace = $item->pop();
+                    $itemToPush = $itemInFurnace = $item->pop();
                 }
 
-                //TODO: event on item inventory switch
+                $event = new HopperTransferContainerEvent($this, $itemToPush, $inventory, $destination->getInventory());
+                $event->call();
+                if ($event->isCancelled()) {
+                    continue;
+                }
 
                 $destination->getInventory()->setItem($slotInFurnace, $itemInFurnace);
                 $inventory->setItem($slot, $item);
@@ -135,7 +141,15 @@ class Hopper extends PMMP_Hopper {
                 // The Jukebox block is handling the playing of records, so we need to get it here and can't use TileJukebox::setRecord().
                 $jukeboxBlock = $destination->getBlock();
                 if($jukeboxBlock instanceof Jukebox){
-                    $jukeboxBlock->insertRecord($item->pop());
+                    $itemToPush = $item->pop();
+
+                    $event = new HopperTransferJukeboxEvent($this, $itemToPush, $jukeboxBlock, true);
+                    $event->call();
+                    if ($event->isCancelled()) {
+                        continue;
+                    }
+
+                    $jukeboxBlock->insertRecord($itemToPush);
                     $jukeboxBlock->getPosition()->getWorld()->setBlock($jukeboxBlock->getPosition(), $jukeboxBlock);
                     $inventory->setItem($slot, $item);
                     return true;
@@ -152,7 +166,11 @@ class Hopper extends PMMP_Hopper {
                 return false;
             }
 
-            //TODO: event on item inventory switch
+            $event = new HopperTransferContainerEvent($this, $itemToPush, $inventory, $destination->getInventory());
+            $event->call();
+            if ($event->isCancelled()) {
+                continue;
+            }
 
             $inventory->setItem($slot, $item);
             $destination->getInventory()->addItem($itemToPush);
@@ -185,7 +203,11 @@ class Hopper extends PMMP_Hopper {
             }
             $itemToPull = $item->pop();
 
-            //TODO: event on item inventory switch
+            $event = new HopperTransferContainerEvent($this, $itemToPull, $origin, $inventory);
+            $event->call();
+            if ($event->isCancelled()) {
+                return false;
+            }
 
             $origin->setItem($slot, $item);
             $inventory->addItem($itemToPull);
@@ -202,7 +224,11 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                //TODO: event on item inventory switch
+                $event = new HopperTransferContainerEvent($this, $itemToPull, $origin, $inventory);
+                $event->call();
+                if ($event->isCancelled()) {
+                    continue;
+                }
 
                 $origin->setItem($slot, $item);
                 $inventory->addItem($itemToPull);
