@@ -11,6 +11,7 @@ use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
 use pocketmine\entity\object\ItemEntity;
+use pocketmine\event\block\BlockItemPickupEvent;
 use pocketmine\inventory\Inventory;
 use pocketmine\item\Bucket;
 use pocketmine\item\Record;
@@ -239,7 +240,11 @@ class Hopper extends PMMP_Hopper {
                 continue;
             }
 
-            //TODO: event on block picking up an item
+            $event = new BlockItemPickupEvent($this, $entity, $item, $inventory);
+            $event->call();
+            if ($event->isCancelled()) {
+                continue;
+            }
 
             $inventory->addItem($item);
             $entity->flagForDespawn();

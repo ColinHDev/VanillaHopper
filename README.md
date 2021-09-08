@@ -6,8 +6,6 @@ This plugin aims to add this logic to the hopper.
 - Pushing to specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox (not working as in vanilla).
 - Pulling from specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox.
 - Calling an event when a hopper moves an item between its own and another inventory. 
-- Calling an event when a hopper picks up an item.
-  - The new `BlockItemPickupEvent`, which is currently dead code in pm itself, but was intentionally added by me to use it later on hoppers.
 - Optimizations
 - Customizations
 
