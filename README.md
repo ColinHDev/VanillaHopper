@@ -29,3 +29,16 @@ Still, I wanted to use that logic in a plugin to use it myself and therefore I c
 - "Performance" tests
   - 128 hoppers pushing 27 * 64 dirt from one chest to another ([Timings](https://timings.pmmp.io/?id=158627)):
     ![Performance Test](https://user-images.githubusercontent.com/54852588/131256515-3611c594-08e1-45a1-8bd2-3ebbaf141c8a.png)
+
+### For developers
+#### Event handling
+- Through the different events, you can easily implement your own rules for hoppers.
+- `BlockItemPickupEvent`
+  - This event is called when a hopper tries to pick up an item.
+  - Handle this event by just creating a normal listener in your plugin and import (use) `pocketmine\event\block\BlockItemPickupEvent`.
+- `HopperTransferContainerEvent`
+  - This event is called when a hopper tries to either push or pull items from a container.
+  - Handle this event by just creating a normal listener in your plugin and import (use) `ColinHDev\VanillaHopper\events\HopperTransferContainerEvent`.
+- `HopperTransferJukeboxEvent`
+  - This event is called when a hopper tries to either push or pull records from a jukebox.
+  - Handle this event by just creating a normal listener in your plugin and import (use) `ColinHDev\VanillaHopper\events\HopperTransferJukeboxEvent`.
