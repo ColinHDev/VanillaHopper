@@ -112,8 +112,8 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $destination->getInventory()->setItem($slotInFurnace, $itemInFurnace);
-                $inventory->setItem($slot, $item);
+                $event->getDestinationInventory()->setItem($slotInFurnace, $itemInFurnace);
+                $event->getHopperInventory()->setItem($slot, $item);
                 return true;
 
             }elseif($destination instanceof TileHopper){
@@ -140,18 +140,18 @@ class Hopper extends PMMP_Hopper {
                 }
 
                 // The Jukebox block is handling the playing of records, so we need to get it here and can't use TileJukebox::setRecord().
-                $jukeboxBlock = $destination->getBlock();
-                if($jukeboxBlock instanceof Jukebox){
+                $jukebox = $destination->getBlock();
+                if($jukebox instanceof Jukebox){
                     $itemToPush = $item->pop();
 
-                    $event = new HopperPushJukeboxEvent($this, $jukeboxBlock, $itemToPush);
+                    $event = new HopperPushJukeboxEvent($this, $jukebox, $itemToPush);
                     $event->call();
                     if ($event->isCancelled()) {
                         continue;
                     }
 
-                    $jukeboxBlock->insertRecord($itemToPush);
-                    $jukeboxBlock->getPosition()->getWorld()->setBlock($jukeboxBlock->getPosition(), $jukeboxBlock);
+                    $event->getDestination()->insertRecord($event->getItem());
+                    $event->getDestination()->getPosition()->getWorld()->setBlock($event->getDestination()->getPosition(), $event->getDestination());
                     $inventory->setItem($slot, $item);
                     return true;
                 }
@@ -173,8 +173,8 @@ class Hopper extends PMMP_Hopper {
                 continue;
             }
 
-            $inventory->setItem($slot, $item);
-            $destination->getInventory()->addItem($itemToPush);
+            $event->getHopperInventory()->setItem($slot, $item);
+            $event->getDestinationInventory()->addItem($event->getItem());
             return true;
         }
         return false;
@@ -210,8 +210,8 @@ class Hopper extends PMMP_Hopper {
                 return false;
             }
 
-            $origin->getInventory()->setItem($slot, $item);
-            $inventory->addItem($itemToPull);
+            $event->getOriginInventory()->setItem($slot, $item);
+            $event->getHopperInventory()->addItem($event->getItem());
             return true;
 
         } else if ($origin instanceof Tile) {
@@ -231,8 +231,8 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $origin->getInventory()->setItem($slot, $item);
-                $inventory->addItem($itemToPull);
+                $event->getOriginInventory()->setItem($slot, $item);
+                $event->getHopperInventory()->addItem($event->getItem());
                 return true;
             }
         }
@@ -273,8 +273,8 @@ class Hopper extends PMMP_Hopper {
                 continue;
             }
 
-            $inventory->addItem($item);
-            $entity->flagForDespawn();
+            $event->getInventory()->addItem($event->getItem());
+            $event->getOrigin()->flagForDespawn();
             return true;
         }
         return false;
