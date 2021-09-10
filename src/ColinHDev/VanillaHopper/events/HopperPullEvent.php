@@ -24,8 +24,4 @@ abstract class HopperPullEvent extends HopperEvent {
     public function getItem() : Item {
         return clone $this->item;
     }
-
-    public function setItem(Item $item) : void {
-        $this->item = clone $item;
-    }
 }

@@ -4,7 +4,6 @@ namespace ColinHDev\VanillaHopper\events;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
 use pocketmine\block\Jukebox;
-use pocketmine\item\Item;
 use pocketmine\item\Record;
 
 class HopperPushJukeboxEvent extends HopperPushEvent {
@@ -26,10 +25,7 @@ class HopperPushJukeboxEvent extends HopperPushEvent {
         return clone $this->item;
     }
 
-    public function setItem(Item $item) : void {
-        if (!$item instanceof Record) {
-            throw new \TypeError("Expected type of item to be an instance of Record, " . get_class($item) . " given.");
-        }
+    public function setItem(Record $item) : void {
         $this->item = clone $item;
     }
 }

@@ -100,11 +100,8 @@ class Hopper extends PMMP_Hopper {
                     if(!$itemInFurnace->canStackWith($item)){
                         continue;
                     }
-                    $itemToPush = $item->pop();
-                    $itemInFurnace->setCount($itemInFurnace->getCount() + 1);
-                }else{
-                    $itemToPush = $itemInFurnace = $item->pop();
                 }
+                $itemToPush = $item->pop();
 
                 $event = new HopperPushContainerEvent($this, $destination->getBlock(), $itemToPush, $inventory, $destination->getInventory());
                 $event->call();
@@ -112,8 +109,8 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $event->getDestinationInventory()->setItem($slotInFurnace, $itemInFurnace);
-                $event->getHopperInventory()->setItem($slot, $item);
+                $event->getHopperInventory()->removeItem($itemToPush);
+                $event->getHopperInventory()->setItem($slotInFurnace, $itemInFurnace->setCount($itemInFurnace->getCount() + 1));
                 return true;
 
             }elseif($destination instanceof TileHopper){
@@ -173,8 +170,8 @@ class Hopper extends PMMP_Hopper {
                 continue;
             }
 
-            $event->getHopperInventory()->setItem($slot, $item);
-            $event->getDestinationInventory()->addItem($event->getItem());
+            $event->getHopperInventory()->removeItem($itemToPush);
+            $event->getDestinationInventory()->addItem($itemToPush);
             return true;
         }
         return false;
@@ -210,8 +207,8 @@ class Hopper extends PMMP_Hopper {
                 return false;
             }
 
+            $event->getHopperInventory()->addItem($itemToPull);
             $event->getOriginInventory()->setItem($slot, $item);
-            $event->getHopperInventory()->addItem($event->getItem());
             return true;
 
         } else if ($origin instanceof Tile) {
@@ -231,8 +228,8 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $event->getOriginInventory()->setItem($slot, $item);
-                $event->getHopperInventory()->addItem($event->getItem());
+                $event->getHopperInventory()->addItem($itemToPull);
+                $event->getOriginInventory()->removeItem($itemToPull);
                 return true;
             }
         }
