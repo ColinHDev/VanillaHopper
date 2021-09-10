@@ -5,7 +5,6 @@ This plugin aims to add this logic to the hopper.
 ### TODOs
 - Optimizations
 - Customizations
-- Probably refactor `HopperTransferContainerEvent` and `HopperTransferJukeboxEvent`. Their implementation is not perfected.
 - Pushing to specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox (not working as in vanilla).
 - Pulling from specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox.
 

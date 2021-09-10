@@ -3,8 +3,9 @@
 namespace ColinHDev\VanillaHopper\blocks;
 
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
-use ColinHDev\VanillaHopper\events\HopperTransferContainerEvent;
-use ColinHDev\VanillaHopper\events\HopperTransferJukeboxEvent;
+use ColinHDev\VanillaHopper\events\HopperPullContainerEvent;
+use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
+use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
 use pocketmine\block\Hopper as PMMP_Hopper;
 use pocketmine\block\inventory\FurnaceInventory;
 use pocketmine\block\inventory\HopperInventory;
@@ -12,9 +13,9 @@ use pocketmine\block\Jukebox;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
+use pocketmine\block\tile\Tile;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\event\block\BlockItemPickupEvent;
-use pocketmine\inventory\Inventory;
 use pocketmine\item\Bucket;
 use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
@@ -46,7 +47,7 @@ class Hopper extends PMMP_Hopper {
         $origin = $this->position->getWorld()->getTile($this->position->getSide(Facing::UP));
         //TODO: Not all blocks a hopper can pull from have an inventory (for example: Jukebox).
         if($origin instanceof Container){
-            $success = $this->pull($inventory, $origin->getInventory()) || $success;
+            $success = $this->pull($inventory, $origin) || $success;
         }else{
             $success = $this->pickup($inventory) || $success;
         }
@@ -105,7 +106,7 @@ class Hopper extends PMMP_Hopper {
                     $itemToPush = $itemInFurnace = $item->pop();
                 }
 
-                $event = new HopperTransferContainerEvent($this, $itemToPush, $inventory, $destination->getInventory());
+                $event = new HopperPushContainerEvent($this, $destination->getBlock(), $itemToPush, $inventory, $destination->getInventory());
                 $event->call();
                 if ($event->isCancelled()) {
                     continue;
@@ -143,7 +144,7 @@ class Hopper extends PMMP_Hopper {
                 if($jukeboxBlock instanceof Jukebox){
                     $itemToPush = $item->pop();
 
-                    $event = new HopperTransferJukeboxEvent($this, $itemToPush, $jukeboxBlock, true);
+                    $event = new HopperPushJukeboxEvent($this, $jukeboxBlock, $itemToPush);
                     $event->call();
                     if ($event->isCancelled()) {
                         continue;
@@ -166,7 +167,7 @@ class Hopper extends PMMP_Hopper {
                 return false;
             }
 
-            $event = new HopperTransferContainerEvent($this, $itemToPush, $inventory, $destination->getInventory());
+            $event = new HopperPushContainerEvent($this, $destination->getBlock(), $itemToPush, $inventory, $destination->getInventory());
             $event->call();
             if ($event->isCancelled()) {
                 continue;
@@ -183,39 +184,39 @@ class Hopper extends PMMP_Hopper {
      * This function handles pulling items by the hopper from a container above.
      * Returns true if an item was successfully pulled or false on failure.
      */
-    private function pull(HopperInventory $inventory, Inventory $origin) : bool{
+    private function pull(HopperInventory $inventory, Container $origin) : bool{
         // Hoppers interact differently when pulling from different kinds of tiles.
         //TODO: Composter
         //TODO: Brewing Stand
         //TODO: Jukebox
-        if($origin instanceof FurnaceInventory){
+        if ($origin instanceof TileFurnace) {
             // Hoppers either pull empty buckets from the furnace's fuel slot or pull from its result slot.
             // They prioritise pulling from the fuel slot over the result slot.
-            $item = $origin->getFuel();
+            $item = $origin->getInventory()->getFuel();
             if($item instanceof Bucket){
                 $slot = FurnaceInventory::SLOT_FUEL;
             }else{
                 $slot = FurnaceInventory::SLOT_RESULT;
-                $item = $origin->getResult();
+                $item = $origin->getInventory()->getResult();
                 if($item->isNull()){
                     return false;
                 }
             }
             $itemToPull = $item->pop();
 
-            $event = new HopperTransferContainerEvent($this, $itemToPull, $origin, $inventory);
+            $event = new HopperPullContainerEvent($this, $origin->getBlock(), $itemToPull, $inventory, $origin->getInventory());
             $event->call();
             if ($event->isCancelled()) {
                 return false;
             }
 
-            $origin->setItem($slot, $item);
+            $origin->getInventory()->setItem($slot, $item);
             $inventory->addItem($itemToPull);
             return true;
 
-        }else{
-            for($slot = 0; $slot < $origin->getSize(); $slot++){
-                $item = $origin->getItem($slot);
+        } else if ($origin instanceof Tile) {
+            for($slot = 0; $slot < $origin->getInventory()->getSize(); $slot++){
+                $item = $origin->getInventory()->getItem($slot);
                 if($item->isNull()){
                     continue;
                 }
@@ -224,13 +225,13 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $event = new HopperTransferContainerEvent($this, $itemToPull, $origin, $inventory);
+                $event = new HopperPullContainerEvent($this, $origin->getBlock(), $itemToPull, $inventory, $origin->getInventory());
                 $event->call();
                 if ($event->isCancelled()) {
                     continue;
                 }
 
-                $origin->setItem($slot, $item);
+                $origin->getInventory()->setItem($slot, $item);
                 $inventory->addItem($itemToPull);
                 return true;
             }
