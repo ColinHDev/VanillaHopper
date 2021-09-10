@@ -8,7 +8,9 @@ use pocketmine\block\inventory\HopperInventory;
 use pocketmine\item\Item;
 
 /**
+ * @allowHandle
  * All hopper pull events of this plugin extend this class.
+ * Called when a hopper pulls an item.
  * TODO: Hoppers not only can pull from blocks, but from entities too (for example: Minecarts).
  */
 abstract class HopperPullEvent extends HopperEvent {

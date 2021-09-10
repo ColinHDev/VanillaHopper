@@ -8,7 +8,9 @@ use pocketmine\block\inventory\HopperInventory;
 use pocketmine\item\Item;
 
 /**
+ * @allowHandle
  * All hopper push events of this plugin extend this class.
+ * Called when a hopper pushes an item.
  * TODO: Hoppers not only can push to blocks, but to entities too (for example: Minecarts).
  */
 abstract class HopperPushEvent extends HopperEvent {

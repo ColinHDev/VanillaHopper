@@ -9,7 +9,9 @@ use pocketmine\event\CancellableTrait;
 use pocketmine\event\Event;
 
 /**
+ * @allowHandle
  * All hopper related events of this plugin extend this class.
+ * Called when a hopper either pushes or pulls an item.
  */
 abstract class HopperEvent extends Event implements Cancellable {
     use CancellableTrait;
