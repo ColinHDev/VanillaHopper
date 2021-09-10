@@ -101,8 +101,11 @@ class Hopper extends PMMP_Hopper {
                     if(!$itemInFurnace->canStackWith($item)){
                         continue;
                     }
+                    $itemToPush = $item->pop();
+                    $itemInFurnace->setCount($itemInFurnace->getCount() + 1);
+                } else {
+                    $itemToPush = $itemInFurnace = $item->pop();
                 }
-                $itemToPush = $item->pop();
 
                 $event = new HopperPushContainerEvent($this, $inventory, $destination->getBlock(), $destination->getInventory(), $itemToPush);
                 $event->call();
@@ -110,8 +113,8 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $inventory->setItem($slotInFurnace, $itemInFurnace->setCount($itemInFurnace->getCount() + 1));
-                $destination->getInventory()->removeItem($itemToPush);
+                $inventory->removeItem($itemToPush);
+                $destination->getInventory()->setItem($slotInFurnace, $itemInFurnace);
                 return true;
 
             }elseif($destination instanceof TileHopper){
