@@ -14,6 +14,7 @@ abstract class HopperPullEvent extends HopperEvent {
     public function __construct(Hopper $hopper, Block $origin, Item $item) {
         parent::__construct($hopper);
         $this->origin = $origin;
+        $this->item = $item;
     }
 
     public function getOrigin() : Block {
