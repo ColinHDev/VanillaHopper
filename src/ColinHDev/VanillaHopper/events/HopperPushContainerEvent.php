@@ -10,28 +10,14 @@ use pocketmine\item\Item;
 
 class HopperPushContainerEvent extends HopperPushEvent {
 
-    private Inventory $hopperInventory;
     private Inventory $destinationInventory;
 
-    public function __construct(Hopper $hopper, Block $destination, Item $item, HopperInventory $hopperInventory, Inventory $destinationInventory) {
-        parent::__construct($hopper, $destination, $item);
-        $this->hopperInventory = $hopperInventory;
+    public function __construct(Hopper $block, HopperInventory $inventory, Block $destination, Inventory $destinationInventory, Item $item) {
+        parent::__construct($block, $inventory, $destination, $item);
         $this->destinationInventory = $destinationInventory;
-    }
-
-    public function getHopperInventory() : Inventory {
-        return $this->hopperInventory;
-    }
-
-    public function setHopperInventory(Inventory $hopperInventory) : void {
-        $this->hopperInventory = $hopperInventory;
     }
 
     public function getDestinationInventory() : Inventory {
         return $this->destinationInventory;
-    }
-
-    public function setDestinationInventory(Inventory $destinationInventory) : void {
-        $this->destinationInventory = $destinationInventory;
     }
 }

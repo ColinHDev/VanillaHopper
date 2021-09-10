@@ -103,14 +103,14 @@ class Hopper extends PMMP_Hopper {
                 }
                 $itemToPush = $item->pop();
 
-                $event = new HopperPushContainerEvent($this, $destination->getBlock(), $itemToPush, $inventory, $destination->getInventory());
+                $event = new HopperPushContainerEvent($this, $inventory, $destination->getBlock(), $destination->getInventory(), $itemToPush);
                 $event->call();
                 if ($event->isCancelled()) {
                     continue;
                 }
 
-                $event->getHopperInventory()->removeItem($itemToPush);
-                $event->getHopperInventory()->setItem($slotInFurnace, $itemInFurnace->setCount($itemInFurnace->getCount() + 1));
+                $inventory->setItem($slotInFurnace, $itemInFurnace->setCount($itemInFurnace->getCount() + 1));
+                $destination->getInventory()->removeItem($itemToPush);
                 return true;
 
             }elseif($destination instanceof TileHopper){
@@ -141,14 +141,14 @@ class Hopper extends PMMP_Hopper {
                 if($jukebox instanceof Jukebox){
                     $itemToPush = $item->pop();
 
-                    $event = new HopperPushJukeboxEvent($this, $jukebox, $itemToPush);
+                    $event = new HopperPushJukeboxEvent($this, $inventory, $jukebox, $itemToPush);
                     $event->call();
                     if ($event->isCancelled()) {
                         continue;
                     }
 
-                    $event->getDestination()->insertRecord($itemToPush);
-                    $event->getDestination()->getPosition()->getWorld()->setBlock($event->getDestination()->getPosition(), $event->getDestination());
+                    $jukebox->insertRecord($itemToPush);
+                    $jukebox->getPosition()->getWorld()->setBlock($jukebox->getPosition(), $jukebox);
                     $inventory->removeItem($itemToPush);
                     return true;
                 }
@@ -164,14 +164,14 @@ class Hopper extends PMMP_Hopper {
                 return false;
             }
 
-            $event = new HopperPushContainerEvent($this, $destination->getBlock(), $itemToPush, $inventory, $destination->getInventory());
+            $event = new HopperPushContainerEvent($this, $inventory, $destination->getBlock(), $destination->getInventory(), $itemToPush);
             $event->call();
             if ($event->isCancelled()) {
                 continue;
             }
 
-            $event->getHopperInventory()->removeItem($itemToPush);
-            $event->getDestinationInventory()->addItem($itemToPush);
+            $inventory->removeItem($itemToPush);
+            $destination->getInventory()->addItem($itemToPush);
             return true;
         }
         return false;
@@ -201,14 +201,14 @@ class Hopper extends PMMP_Hopper {
             }
             $itemToPull = $item->pop();
 
-            $event = new HopperPullContainerEvent($this, $origin->getBlock(), $itemToPull, $inventory, $origin->getInventory());
+            $event = new HopperPullContainerEvent($this, $inventory, $origin->getBlock(), $origin->getInventory(), $itemToPull);
             $event->call();
             if ($event->isCancelled()) {
                 return false;
             }
 
-            $event->getHopperInventory()->addItem($itemToPull);
-            $event->getOriginInventory()->setItem($slot, $item);
+            $inventory->addItem($itemToPull);
+            $origin->getInventory()->setItem($slot, $item);
             return true;
 
         } else if ($origin instanceof Tile) {
@@ -222,14 +222,14 @@ class Hopper extends PMMP_Hopper {
                     continue;
                 }
 
-                $event = new HopperPullContainerEvent($this, $origin->getBlock(), $itemToPull, $inventory, $origin->getInventory());
+                $event = new HopperPullContainerEvent($this, $inventory, $origin->getBlock(), $origin->getInventory(), $itemToPull);
                 $event->call();
                 if ($event->isCancelled()) {
                     continue;
                 }
 
-                $event->getHopperInventory()->addItem($itemToPull);
-                $event->getOriginInventory()->removeItem($itemToPull);
+                $inventory->addItem($itemToPull);
+                $origin->getInventory()->removeItem($itemToPull);
                 return true;
             }
         }

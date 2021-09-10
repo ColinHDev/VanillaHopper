@@ -3,6 +3,7 @@
 namespace ColinHDev\VanillaHopper\events;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
+use pocketmine\block\inventory\HopperInventory;
 use pocketmine\event\Cancellable;
 use pocketmine\event\CancellableTrait;
 use pocketmine\event\Event;
@@ -10,13 +11,19 @@ use pocketmine\event\Event;
 abstract class HopperEvent extends Event implements Cancellable {
     use CancellableTrait;
 
-    private Hopper $hopper;
+    protected Hopper $block;
+    protected HopperInventory $inventory;
 
-    public function __construct(Hopper $hopper) {
-        $this->hopper = $hopper;
+    public function __construct(Hopper $block, HopperInventory $inventory) {
+        $this->block = $block;
+        $this->inventory = $inventory;
     }
 
-    public function getHopper() : Hopper {
-        return $this->hopper;
+    public function getBlock() : Hopper {
+        return $this->block;
+    }
+
+    public function getInventory() : HopperInventory {
+        return $this->inventory;
     }
 }

@@ -3,6 +3,7 @@
 namespace ColinHDev\VanillaHopper\events;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
+use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\Jukebox;
 use pocketmine\item\Record;
 
@@ -11,8 +12,8 @@ class HopperPushJukeboxEvent extends HopperPushEvent {
     private Jukebox $destination;
     private Record $item;
 
-    public function __construct(Hopper $hopper, Jukebox $destination, Record $item) {
-        parent::__construct($hopper, $destination, $item);
+    public function __construct(Hopper $block, HopperInventory $inventory, Jukebox $destination, Record $item) {
+        parent::__construct($block, $inventory, $destination, $item);
         $this->destination = $destination;
         $this->item = $item;
     }
