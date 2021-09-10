@@ -6,6 +6,7 @@ use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
 use ColinHDev\VanillaHopper\events\HopperPullContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
+use pocketmine\block\Block;
 use pocketmine\block\Hopper as PMMP_Hopper;
 use pocketmine\block\inventory\FurnaceInventory;
 use pocketmine\block\inventory\HopperInventory;
@@ -13,7 +14,6 @@ use pocketmine\block\Jukebox;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
-use pocketmine\block\tile\Tile;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\event\block\BlockItemPickupEvent;
 use pocketmine\item\Bucket;
@@ -43,12 +43,12 @@ class Hopper extends PMMP_Hopper {
 
         $inventory = $tile->getInventory();
         $success = $this->push($inventory);
-        // Hoppers that have a container above them, won't try to pick up items.
-        $origin = $this->position->getWorld()->getTile($this->position->getSide(Facing::UP));
-        //TODO: Not all blocks a hopper can pull from have an inventory (for example: Jukebox).
-        if($origin instanceof Container){
+        // Hoppers that have a block above them from which they can pull from, won't try to pick up items.
+        // TODO: Hoppers not only can pull from blocks, but from entities too (for example: Minecarts).
+        $origin = $this->getPullable();
+        if ($origin !== null) {
             $success = $this->pull($inventory, $origin) || $success;
-        }else{
+        } else {
             $success = $this->pickup($inventory) || $success;
         }
         // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
@@ -65,6 +65,7 @@ class Hopper extends PMMP_Hopper {
         if(count($inventory->getContents()) === 0){
             return false;
         }
+        // TODO: Hoppers not only can push to blocks, but to entities too (for example: Minecarts).
         $destination = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
         if($destination === null){
             return false;
@@ -178,62 +179,91 @@ class Hopper extends PMMP_Hopper {
     }
 
     /**
-     * This function handles pulling items by the hopper from a container above.
+     * This function checks if the hopper has a block above it, from which he can pull.
+     * Returns the found block or null if there is no block above or he can't pull from it.
+     * TODO: Hoppers not only can pull from blocks, but from entities too (for example: Minecarts).
+     */
+    private function getPullable() : ?Block {
+        // Hoppers can pull from all kinds of containers.
+        // So, if we have a container given, we don't need to compare the block itself with all possible block types.
+        $tile = $this->position->getWorld()->getTile($this->position->getSide(Facing::UP));
+        if ($tile instanceof Container) {
+            return $tile->getBlock();
+        }
+
+        // We don't need to check if the block is a chest, furnace, etc. because the corresponding tile of that blocks is a container.
+        // Of course, these blocks couldn't have a tile set, so the upper if statement couldn't return,
+        // but then they are useless anyway because, without a tile, they don't have an inventory to pull from.
+        $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP));
+        return match (true) {
+            $block instanceof Jukebox => $block,
+            default => null
+        };
+    }
+
+    /**
+     * This function handles pulling items by the hopper from a block above.
      * Returns true if an item was successfully pulled or false on failure.
      */
-    private function pull(HopperInventory $inventory, Container $origin) : bool{
-        // Hoppers interact differently when pulling from different kinds of tiles.
+    private function pull(HopperInventory $inventory, Block $origin) : bool{
+        // Hoppers interact differently when pulling from different kinds of blocks.
         //TODO: Composter
         //TODO: Brewing Stand
         //TODO: Jukebox
-        if ($origin instanceof TileFurnace) {
-            // Hoppers either pull empty buckets from the furnace's fuel slot or pull from its result slot.
-            // They prioritise pulling from the fuel slot over the result slot.
-            $item = $origin->getInventory()->getFuel();
-            if($item instanceof Bucket){
-                $slot = FurnaceInventory::SLOT_FUEL;
-            }else{
-                $slot = FurnaceInventory::SLOT_RESULT;
-                $item = $origin->getInventory()->getResult();
-                if($item->isNull()){
-                    return false;
-                }
-            }
-            $itemToPull = $item->pop();
-
-            $event = new HopperPullContainerEvent($this, $inventory, $origin->getBlock(), $origin->getInventory(), $itemToPull);
-            $event->call();
-            if ($event->isCancelled()) {
-                return false;
-            }
-
-            $inventory->addItem($itemToPull);
-            $origin->getInventory()->setItem($slot, $item);
+        $originTile = $origin->position->getWorld()->getTile($origin->position);
+        if ($origin instanceof Jukebox) {
             return true;
 
-        } else if ($origin instanceof Tile) {
-            for($slot = 0; $slot < $origin->getInventory()->getSize(); $slot++){
-                $item = $origin->getInventory()->getItem($slot);
-                if($item->isNull()){
-                    continue;
+        } else if ($originTile instanceof Container) {
+            if ($originTile instanceof TileFurnace) {
+                // Hoppers either pull empty buckets from the furnace's fuel slot or pull from its result slot.
+                // They prioritise pulling from the fuel slot over the result slot.
+                $item = $originTile->getInventory()->getFuel();
+                if($item instanceof Bucket){
+                    $slot = FurnaceInventory::SLOT_FUEL;
+                }else{
+                    $slot = FurnaceInventory::SLOT_RESULT;
+                    $item = $originTile->getInventory()->getResult();
+                    if($item->isNull()){
+                        return false;
+                    }
                 }
                 $itemToPull = $item->pop();
-                if(!$inventory->canAddItem($itemToPull)){
-                    continue;
-                }
 
-                $event = new HopperPullContainerEvent($this, $inventory, $origin->getBlock(), $origin->getInventory(), $itemToPull);
+                $event = new HopperPullContainerEvent($this, $inventory, $origin, $originTile->getInventory(), $itemToPull);
                 $event->call();
                 if ($event->isCancelled()) {
-                    continue;
+                    return false;
                 }
 
                 $inventory->addItem($itemToPull);
-                $origin->getInventory()->removeItem($itemToPull);
+                $originTile->getInventory()->setItem($slot, $item);
                 return true;
+
+            } else {
+                for($slot = 0; $slot < $originTile->getInventory()->getSize(); $slot++){
+                    $item = $originTile->getInventory()->getItem($slot);
+                    if($item->isNull()){
+                        continue;
+                    }
+                    $itemToPull = $item->pop();
+                    if(!$inventory->canAddItem($itemToPull)){
+                        continue;
+                    }
+
+                    $event = new HopperPullContainerEvent($this, $inventory, $origin, $originTile->getInventory(), $itemToPull);
+                    $event->call();
+                    if ($event->isCancelled()) {
+                        continue;
+                    }
+
+                    $inventory->addItem($itemToPull);
+                    $originTile->getInventory()->removeItem($itemToPull);
+                    return true;
+                }
             }
         }
-        return false;
+        return true;
     }
 
     /**
