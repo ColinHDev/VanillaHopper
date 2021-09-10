@@ -24,8 +24,4 @@ class HopperPushJukeboxEvent extends HopperPushEvent {
     public function getItem() : Record {
         return clone $this->item;
     }
-
-    public function setItem(Record $item) : void {
-        $this->item = clone $item;
-    }
 }

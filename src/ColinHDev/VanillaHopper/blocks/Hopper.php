@@ -147,9 +147,9 @@ class Hopper extends PMMP_Hopper {
                         continue;
                     }
 
-                    $event->getDestination()->insertRecord($event->getItem());
+                    $event->getDestination()->insertRecord($itemToPush);
                     $event->getDestination()->getPosition()->getWorld()->setBlock($event->getDestination()->getPosition(), $event->getDestination());
-                    $inventory->setItem($slot, $item);
+                    $inventory->removeItem($itemToPush);
                     return true;
                 }
                 return false;
