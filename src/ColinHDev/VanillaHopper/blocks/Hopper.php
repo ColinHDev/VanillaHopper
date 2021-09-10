@@ -211,10 +211,7 @@ class Hopper extends PMMP_Hopper {
         //TODO: Brewing Stand
         //TODO: Jukebox
         $originTile = $origin->position->getWorld()->getTile($origin->position);
-        if ($origin instanceof Jukebox) {
-            return true;
-
-        } else if ($originTile instanceof Container) {
+        if ($originTile instanceof Container) {
             if ($originTile instanceof TileFurnace) {
                 // Hoppers either pull empty buckets from the furnace's fuel slot or pull from its result slot.
                 // They prioritise pulling from the fuel slot over the result slot.
@@ -263,7 +260,7 @@ class Hopper extends PMMP_Hopper {
                 }
             }
         }
-        return true;
+        return false;
     }
 
     /**
