@@ -32,12 +32,18 @@ Still, I wanted to use that logic in a plugin to use it myself and therefore I c
 ### For developers
 #### Event handling
 - Through the different events, you can easily implement your own rules for hoppers.
-- `BlockItemPickupEvent`
+  Handle these events by simply creating an ordinary listener (`class EventListener implements Listener`) in your plugin and import (`use` keyword) them by their namespace (`event name`: `namespace`).
+- `BlockItemPickupEvent`: `pocketmine\event\block\BlockItemPickupEvent`
   - This event is called when a hopper tries to pick up an item.
-  - Handle this event by just creating a normal listener in your plugin and import (use) `pocketmine\event\block\BlockItemPickupEvent`.
-- `HopperTransferContainerEvent`
-  - This event is called when a hopper tries to either push or pull items from a container.
-  - Handle this event by just creating a normal listener in your plugin and import (use) `ColinHDev\VanillaHopper\events\HopperTransferContainerEvent`.
-- `HopperTransferJukeboxEvent`
-  - This event is called when a hopper tries to either push or pull records from a jukebox.
-  - Handle this event by just creating a normal listener in your plugin and import (use) `ColinHDev\VanillaHopper\events\HopperTransferJukeboxEvent`.
+- `HopperEvent`: `ColinHDev\VanillaHopper\events\HopperEvent`
+  - This event is called when a hopper either tries to push or pull an item.
+- `HopperPushEvent`: `ColinHDev\VanillaHopper\events\HopperPushEvent`
+  - This event is called when a hopper tries to push an item.
+- `HopperPushContainerEvent`: `ColinHDev\VanillaHopper\events\HopperPushContainerEvent`
+  - This event is called when a hopper tries to push an item into a block's inventory.
+- `HopperPushJukeboxEvent`: `ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent`
+  - This event is called when a hopper tries to push a record into a jukebox.
+- `HopperPullEvent`: `ColinHDev\VanillaHopper\events\HopperPullEvent`
+  - This event is called when a hopper tries to pull an item.
+- `HopperPullContainerEvent`: `ColinHDev\VanillaHopper\events\HopperPullContainerEvent`
+  - This event is called when a hopper tries to pull an item from a block's inventory.
