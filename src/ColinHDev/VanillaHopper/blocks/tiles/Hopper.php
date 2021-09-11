@@ -8,8 +8,6 @@ use pocketmine\world\World;
 
 class Hopper extends PMMP_Hopper {
 
-    public const DEFAULT_TRANSFER_COOLDOWN = 8;
-
     private int $transferCooldown = 0;
     private ?int $lastTick = null;
 

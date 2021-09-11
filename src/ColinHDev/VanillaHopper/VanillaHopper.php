@@ -12,7 +12,10 @@ use pocketmine\plugin\PluginBase;
 
 class VanillaHopper extends PluginBase {
 
+    private static VanillaHopper $instance;
+
     public function onLoad() : void {
+        self::$instance = $this;
         // overwrite Hopper block
         $oldHopper = VanillaBlocks::HOPPER();
         BlockFactory::getInstance()->register(
@@ -25,5 +28,9 @@ class VanillaHopper extends PluginBase {
         );
         // overwrite Hopper tile
         TileFactory::getInstance()->register(TileHopper::class, ["Hopper", "minecraft:hopper"]);
+    }
+
+    public static function getInstance() : VanillaHopper {
+        return self::$instance;
     }
 }

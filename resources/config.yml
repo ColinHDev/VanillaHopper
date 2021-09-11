@@ -1,0 +1,9 @@
+# Define the number of ticks a hopper is on cooldown after pushing, pulling or picking up an item.
+# Default: 8
+hopper.transferCooldown: 8
+# Define the number of items the hopper tries to push, pull or pick up when updated.
+# Default: 1
+hopper.itemsPerUpdate: 1
+# Define if a hopper should be on cooldown even if it neither pushed, pulled or picked up an item.
+# Default: false
+hopper.alwaysSetCooldown: false
