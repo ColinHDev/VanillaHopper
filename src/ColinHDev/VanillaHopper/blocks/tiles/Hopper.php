@@ -11,6 +11,7 @@ class Hopper extends PMMP_Hopper {
     public const DEFAULT_TRANSFER_COOLDOWN = 8;
 
     private int $transferCooldown = 0;
+    private ?int $lastTick = null;
 
     public function __construct(World $world, Vector3 $pos) {
         parent::__construct($world, $pos);
@@ -23,5 +24,13 @@ class Hopper extends PMMP_Hopper {
 
     public function setTransferCooldown(int $transferCooldown) : void {
         $this->transferCooldown = $transferCooldown;
+    }
+
+    public function getLastTick() : ?int {
+        return $this->lastTick;
+    }
+
+    public function setLastTick(int $lastTick) : void {
+        $this->lastTick = $lastTick;
     }
 }

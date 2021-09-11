@@ -23,38 +23,39 @@ use pocketmine\math\Facing;
 
 class Hopper extends PMMP_Hopper {
 
-    public function onScheduledUpdate() : void{
-        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
-
+    public function onScheduledUpdate() : void {
         $tile = $this->position->getWorld()->getTile($this->position);
-        if(!$tile instanceof TileHopper){
+        if (!$tile instanceof TileHopper) {
+            // We don't schedule another update because we can't work with a hopper that has no tile and therefore no inventory.
+            // The update should be scheduled on its own by the tile if it is eventually created.
             return;
         }
 
         $transferCooldown = $tile->getTransferCooldown();
-        if($transferCooldown > 0){
-            $transferCooldown--;
-            $tile->setTransferCooldown($transferCooldown);
+        $currentTick = $this->position->getWorld()->getServer()->getTick();
+        if ($transferCooldown > 0) {
+            $transferCooldown -= ($currentTick - ($tile->getLastTick() ?? ($currentTick - 1)));
         }
 
-        if($this->isPowered() || $transferCooldown > 0){
-            return;
+        if (!$this->isPowered() && $transferCooldown <= 0) {
+            $inventory = $tile->getInventory();
+            $success = $this->push($inventory);
+            // Hoppers that have a block above them from which they can pull from, won't try to pick up items.
+            // TODO: Hoppers not only can pull from blocks, but from entities too (for example: Minecarts).
+            $origin = $this->getPullable();
+            if ($origin !== null) {
+                $success = $this->pull($inventory, $origin) || $success;
+            } else {
+                $success = $this->pickup($inventory) || $success;
+            }
+            // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
+            if ($success) {
+                $transferCooldown = TileHopper::DEFAULT_TRANSFER_COOLDOWN;
+            }
         }
-
-        $inventory = $tile->getInventory();
-        $success = $this->push($inventory);
-        // Hoppers that have a block above them from which they can pull from, won't try to pick up items.
-        // TODO: Hoppers not only can pull from blocks, but from entities too (for example: Minecarts).
-        $origin = $this->getPullable();
-        if ($origin !== null) {
-            $success = $this->pull($inventory, $origin) || $success;
-        } else {
-            $success = $this->pickup($inventory) || $success;
-        }
-        // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
-        if($success){
-            $tile->setTransferCooldown(TileHopper::DEFAULT_TRANSFER_COOLDOWN);
-        }
+        $tile->setTransferCooldown(max(0, $transferCooldown));
+        $tile->setLastTick($currentTick);
+        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, max(1, $transferCooldown));
     }
 
     /**
@@ -125,6 +126,7 @@ class Hopper extends PMMP_Hopper {
                 // Hoppers pushing into empty hoppers set the empty hoppers transfer cooldown back to the default amount of ticks.
                 if(count($destination->getInventory()->getContents()) === 0){
                     $destination->setTransferCooldown(TileHopper::DEFAULT_TRANSFER_COOLDOWN);
+                    $this->position->getWorld()->scheduleDelayedBlockUpdate($destination->getPosition(), TileHopper::DEFAULT_TRANSFER_COOLDOWN);
                 }
 
             }elseif($destination instanceof TileJukebox){
