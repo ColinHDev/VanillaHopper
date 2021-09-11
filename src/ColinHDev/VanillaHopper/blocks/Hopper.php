@@ -55,7 +55,6 @@ class Hopper extends PMMP_Hopper {
         }
         $tile->setTransferCooldown(max(0, $transferCooldown));
         $tile->setLastTick($currentTick);
-        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, max(1, $transferCooldown));
     }
 
     /**
@@ -126,7 +125,6 @@ class Hopper extends PMMP_Hopper {
                 // Hoppers pushing into empty hoppers set the empty hoppers transfer cooldown back to the default amount of ticks.
                 if(count($destination->getInventory()->getContents()) === 0){
                     $destination->setTransferCooldown(TileHopper::DEFAULT_TRANSFER_COOLDOWN);
-                    $this->position->getWorld()->scheduleDelayedBlockUpdate($destination->getPosition(), TileHopper::DEFAULT_TRANSFER_COOLDOWN);
                 }
 
             }elseif($destination instanceof TileJukebox){

@@ -24,6 +24,7 @@ class Hopper extends PMMP_Hopper {
 
     public function setTransferCooldown(int $transferCooldown) : void {
         $this->transferCooldown = $transferCooldown;
+        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, max(1, $transferCooldown));
     }
 
     public function getLastTick() : ?int {
