@@ -47,7 +47,15 @@ class Hopper extends PMMP_Hopper {
             if ($origin !== null) {
                 $success = $this->pull($inventory, $origin) || $success;
             } else {
-                $success = $this->pickup($inventory) || $success;
+                // We don't need to reconstruct the collision boxes every time the hopper is updated.
+                // That's why we store it in the tile.
+                $pickupCollisionBoxes = $tile->getPickupCollisionBoxes();
+                if ($pickupCollisionBoxes === null) {
+                    var_dump(1);
+                    $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
+                    $tile->setPickupCollisionBoxes($pickupCollisionBoxes);
+                }
+                $success = $this->pickup($inventory, $pickupCollisionBoxes) || $success;
             }
             // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
             if ($success || ResourceManager::getInstance()->getAlwaysSetCooldown()) {
@@ -289,11 +297,53 @@ class Hopper extends PMMP_Hopper {
     /**
      * This function handles picking up items by the hopper.
      * Returns true if an item was successfully picked up or false on failure.
+     * @param AxisAlignedBB[] $pickupCollisionBoxes
      */
-    private function pickup(HopperInventory $inventory) : bool {
+    private function pickup(HopperInventory $inventory, array $pickupCollisionBoxes) : bool {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
+        foreach ($pickupCollisionBoxes as $pickupCollisionBox) {
+            foreach ($this->position->getWorld()->getNearbyEntities($pickupCollisionBox) as $entity) {
+                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) {
+                    continue;
+                }
+                if ($itemsToTransfer <= 0) {
+                    return true;
+                }
+                // Unlike Java Edition, Bedrock Edition's hoppers don't save in which order item entities landed on top of them to collect them in that order.
+                // In Bedrock Edition hoppers collect item entities in the order in which they entered the chunk.
+                // Because of how entities are saved by PocketMine-MP the first entities of this loop are also the first ones who were saved.
+                // That's why we don't need to implement any sorting mechanism.
+                $item = $entity->getItem();
+                if(!$inventory->canAddItem($item)){
+                    continue;
+                }
+
+                $event = new BlockItemPickupEvent($this, $entity, $item, $inventory);
+                $event->call();
+                if ($event->isCancelled()) {
+                    continue;
+                }
+
+                $itemsToTransfer--;
+                $event->getInventory()->addItem($event->getItem());
+                $event->getOrigin()->flagForDespawn();
+            }
+        }
+        if ($itemsToTransfer !== 0 && $itemsToTransfer === ResourceManager::getInstance()->getItemsPerUpdate()) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * This function returns all collision boxes of the hopper, from which he can pick up items.
+     * @return AxisAlignedBB[]
+     */
+    private function getPickupCollisionBoxes() : array {
+        $pickupCollisionBoxes = [];
+
         // In Bedrock Edition hoppers collect from the lower 3/4 of the block space above them.
-        $pickupCollisionBox = new AxisAlignedBB(
+        $pickupCollisionBoxes[] = new AxisAlignedBB(
             $this->position->getX(),
             $this->position->getY() + 1,
             $this->position->getZ(),
@@ -301,35 +351,18 @@ class Hopper extends PMMP_Hopper {
             $this->position->getY() + 1.75,
             $this->position->getZ() + 1
         );
-        foreach($this->position->getWorld()->getNearbyEntities($pickupCollisionBox) as $entity){
-            if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) {
-                continue;
-            }
-            if ($itemsToTransfer <= 0) {
-                return true;
-            }
-            // Unlike Java Edition, Bedrock Edition's hoppers don't save in which order item entities landed on top of them to collect them in that order.
-            // In Bedrock Edition hoppers collect item entities in the order in which they entered the chunk.
-            // Because of how entities are saved by PocketMine-MP the first entities of this loop are also the first ones who were saved.
-            // That's why we don't need to implement any sorting mechanism.
-            $item = $entity->getItem();
-            if(!$inventory->canAddItem($item)){
-                continue;
-            }
 
-            $event = new BlockItemPickupEvent($this, $entity, $item, $inventory);
-            $event->call();
-            if ($event->isCancelled()) {
-                continue;
-            }
+        // Hoppers can also collect from their bowl.
+        // Its bottom is 6 pixels below the space above the hopper and trimmed by 3 pixels in each horizontal direction.
+        $pickupCollisionBoxes[] = new AxisAlignedBB(
+            $this->position->getX() + 3 / 16,
+            $this->position->getY() + 10 / 16,
+            $this->position->getZ() + 3 / 16,
+            $this->position->getX() + 13 / 16,
+            $this->position->getY() + 1,
+            $this->position->getZ() + 13 / 16
+        );
 
-            $itemsToTransfer--;
-            $event->getInventory()->addItem($event->getItem());
-            $event->getOrigin()->flagForDespawn();
-        }
-        if ($itemsToTransfer !== 0 && $itemsToTransfer === ResourceManager::getInstance()->getItemsPerUpdate()) {
-            return false;
-        }
-        return true;
+        return $pickupCollisionBoxes;
     }
 }
