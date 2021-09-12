@@ -51,7 +51,6 @@ class Hopper extends PMMP_Hopper {
                 // That's why we store it in the tile.
                 $pickupCollisionBoxes = $tile->getPickupCollisionBoxes();
                 if ($pickupCollisionBoxes === null) {
-                    var_dump(1);
                     $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
                     $tile->setPickupCollisionBoxes($pickupCollisionBoxes);
                 }
