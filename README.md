@@ -2,12 +2,6 @@
 In pm4, hopper blocks were implemented to have an inventory. But the logic for pushing, pulling and picking up items was missing nonetheless.
 This plugin aims to add this logic to the hopper.
 
-### TODOs
-- Optimizations
-- Customizations
-- Pushing to specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox (not working as in vanilla).
-- Pulling from specific blocks couldn't be implemented because these blocks aren't implemented at the moment. This includes the Composter, the Brewing Stand and the Jukebox.
-
 ### FAQ
 #### What are your sources?
 Every information about the logic for pushing, pulling and picking up items came from the [minecraft fandom wiki](https://minecraft.fandom.com/wiki/Hopper).
