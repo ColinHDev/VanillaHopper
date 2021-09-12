@@ -2,6 +2,7 @@
 
 namespace ColinHDev\VanillaHopper\blocks\tiles;
 
+use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
 use pocketmine\block\tile\Hopper as PMMP_Hopper;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Vector3;
@@ -16,7 +17,7 @@ class Hopper extends PMMP_Hopper {
 
     public function __construct(World $world, Vector3 $pos) {
         parent::__construct($world, $pos);
-        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
+        BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, 1);
     }
 
     public function getTransferCooldown() : int {
@@ -25,7 +26,8 @@ class Hopper extends PMMP_Hopper {
 
     public function setTransferCooldown(int $transferCooldown) : void {
         $this->transferCooldown = $transferCooldown;
-        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, max(1, $transferCooldown));
+        // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
+        BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown));
     }
 
     public function getLastTick() : ?int {

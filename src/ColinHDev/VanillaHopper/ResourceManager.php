@@ -11,6 +11,7 @@ class ResourceManager {
     private int $defaultTransferCooldown;
     private int $itemsPerUpdate;
     private bool $alwaysSetCooldown;
+    private int $updatesPerTick;
 
     public function __construct() {
         VanillaHopper::getInstance()->saveResource("config.yml");
@@ -19,6 +20,7 @@ class ResourceManager {
         $this->defaultTransferCooldown = max(1, (int) $config->get("hopper.transferCooldown", 8));
         $this->itemsPerUpdate = max(1, (int) $config->get("hopper.itemsPerUpdate", 1));
         $this->alwaysSetCooldown = (bool) $config->get("hopper.alwaysSetCooldown", false);
+        $this->updatesPerTick = (int) $config->get("hopper.updatesPerTick", -1);
     }
 
     public function getDefaultTransferCooldown() : int {
@@ -31,5 +33,9 @@ class ResourceManager {
 
     public function getAlwaysSetCooldown() : bool {
         return $this->alwaysSetCooldown;
+    }
+
+    public function getUpdatesPerTick() : int {
+        return $this->updatesPerTick;
     }
 }

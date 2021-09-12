@@ -7,3 +7,6 @@ hopper.itemsPerUpdate: 1
 # Define if a hopper should be on cooldown even if it neither pushed, pulled or picked up an item.
 # Default: false
 hopper.alwaysSetCooldown: false
+# Define how many hoppers are allowed to be updated every tick.
+# Default: 0 (disabled)
+hopper.updatesPerTick: 0
