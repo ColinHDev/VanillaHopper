@@ -14,9 +14,6 @@ Customizations can be done in the `config.yml` in the plugin's `plugin_data` fol
 - `hopper.itemsPerUpdate`: `1`
   - Normally a hopper only pushes one item and pulls or picks up one per update. You can specify how many items a hopper will try to push, pull or pick up when updated.
     This can be useful if you increased the cooldown of hoppers but want to keep the same "item per tick" ratio.
-- `hopper.alwaysSetCooldown`: `false`
-  - A hopper is normally only set on cooldown if it either pushed, pulled or picked up an item in an update. If it couldn't, it would receive another update in the next tick.
-    As it is very performance costly that maybe dozens of hoppers of an empty hopper system are updated every tick, you can specify if hoppers should even be set back on cooldown, if they haven't pushed, pulled or picked up an item.
 - `hopper.updatesPerTick`: `0`
   - By default, there is no limit on how many block updates can be scheduled per tick.
     As it would be very performance costly to have scheduled hundreds of hopper updates scheduled on the same tick, you can change this number, to limit the number of hopper updates that are allowed to be scheduled per tick.

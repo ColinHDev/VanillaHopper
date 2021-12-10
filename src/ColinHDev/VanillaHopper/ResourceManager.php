@@ -10,7 +10,6 @@ class ResourceManager {
 
     private int $defaultTransferCooldown;
     private int $itemsPerUpdate;
-    private bool $alwaysSetCooldown;
     private int $updatesPerTick;
 
     public function __construct() {
@@ -19,7 +18,6 @@ class ResourceManager {
 
         $this->defaultTransferCooldown = max(1, (int) $config->get("hopper.transferCooldown", 8));
         $this->itemsPerUpdate = max(1, (int) $config->get("hopper.itemsPerUpdate", 1));
-        $this->alwaysSetCooldown = (bool) $config->get("hopper.alwaysSetCooldown", false);
         $this->updatesPerTick = (int) $config->get("hopper.updatesPerTick", -1);
     }
 
@@ -29,10 +27,6 @@ class ResourceManager {
 
     public function getItemsPerUpdate() : int {
         return $this->itemsPerUpdate;
-    }
-
-    public function getAlwaysSetCooldown() : bool {
-        return $this->alwaysSetCooldown;
     }
 
     public function getUpdatesPerTick() : int {

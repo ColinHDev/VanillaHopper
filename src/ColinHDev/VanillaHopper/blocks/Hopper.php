@@ -57,7 +57,7 @@ class Hopper extends PMMP_Hopper {
                 $success = $this->pickup($inventory, $pickupCollisionBoxes) || $success;
             }
             // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
-            if ($success || ResourceManager::getInstance()->getAlwaysSetCooldown()) {
+            if ($success) {
                 $transferCooldown = ResourceManager::getInstance()->getDefaultTransferCooldown();
             }
         }
