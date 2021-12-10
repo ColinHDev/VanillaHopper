@@ -14,9 +14,9 @@ class VanillaHopper extends PluginBase {
 
     private static VanillaHopper $instance;
 
-    public function onLoad() : void {
+    public function onEnable() : void {
         self::$instance = $this;
-        // overwrite Hopper block
+
         $oldHopper = VanillaBlocks::HOPPER();
         BlockFactory::getInstance()->register(
             new Hopper(
@@ -26,7 +26,7 @@ class VanillaHopper extends PluginBase {
             ),
             true
         );
-        // overwrite Hopper tile
+
         TileFactory::getInstance()->register(TileHopper::class, ["Hopper", "minecraft:hopper"]);
     }
 
