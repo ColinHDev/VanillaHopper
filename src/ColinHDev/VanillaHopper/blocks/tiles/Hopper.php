@@ -12,6 +12,7 @@ class Hopper extends PMMP_Hopper {
 
     private int $transferCooldown = 0;
     private ?int $lastTick = null;
+    private bool $isScheduledForDelayedBlockUpdate = true;
     /** @var AxisAlignedBB[] | null */
     private ?array $pickupCollisionBoxes = null;
 
@@ -37,7 +38,15 @@ class Hopper extends PMMP_Hopper {
     }
 
     public function isScheduledForDelayedBlockUpdate() : bool {
-        return $this->transferCooldown > 0 && $this->lastTick !== null;
+        // An earlier approach was the following:
+        // return $this->transferCooldown > 0 && $this->lastTick !== null;
+        // The problem with that is that it was not possible to schedule a block update for the current tick
+        // (transfer cooldown of zero) with the output of the method being changed to true.
+        return $this->isScheduledForDelayedBlockUpdate;
+    }
+
+    public function setScheduledForDelayedBlockUpdate(bool $isScheduledForDelayedBlockUpdate) : void {
+        $this->isScheduledForDelayedBlockUpdate = $isScheduledForDelayedBlockUpdate;
     }
 
     /**

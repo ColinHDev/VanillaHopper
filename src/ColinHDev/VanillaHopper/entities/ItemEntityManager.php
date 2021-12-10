@@ -97,6 +97,7 @@ final class ItemEntityManager {
                                     0
                                 )
                             );
+                            $tile->setScheduledForDelayedBlockUpdate(true);
                         }
 
                         $blockHash = World::blockHash($position->x, $position->y, $position->z);

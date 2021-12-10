@@ -68,11 +68,13 @@ class Hopper extends PMMP_Hopper {
         }
         if ($transferCooldown === 0) {
             $tile->setTransferCooldown(0);
+            $tile->setScheduledForDelayedBlockUpdate(false);
         } else {
             // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
             $tile->setTransferCooldown(
                 BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown))
             );
+            $tile->setScheduledForDelayedBlockUpdate(true);
         }
         $tile->setLastTick($currentTick);
     }
