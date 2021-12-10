@@ -10,7 +10,9 @@ use pocketmine\entity\object\ItemEntity;
 use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\scheduler\TaskHandler;
+use pocketmine\Server;
 use pocketmine\utils\SingletonTrait;
+use pocketmine\world\format\Chunk;
 use pocketmine\world\Position;
 use pocketmine\world\World;
 
@@ -113,6 +115,23 @@ final class ItemEntityManager {
                             $this->entitiesByHopper[$worldID][$blockHash] = [];
                         }
                         $this->entitiesByHopper[$worldID][$blockHash][$entityID] = $entity;
+                    }
+                    // Unlike Java Edition, Bedrock Edition's hoppers don't save in which order item entities landed on top of them to collect them in that order.
+                    // In Bedrock Edition hoppers collect item entities in the order in which they entered the chunk.
+                    foreach ($this->entitiesByHopper as $worldID => $entities) {
+                        $world = VanillaHopper::getInstance()->getServer()->getWorldManager()->getWorld($worldID);
+                        foreach ($entities as $blockHash => $hopperEntities) {
+                            World::getBlockXYZ($blockHash, $x, $y, $z);
+                            $chunkX = $x >> Chunk::COORD_BIT_SIZE;
+                            $chunkZ = $z >> Chunk::COORD_BIT_SIZE;
+                            uksort(
+                                $hopperEntities,
+                                function (int $entityID1, int $entityID2) use ($world, $chunkX, $chunkZ) : int {
+                                    $chunkEntities = array_keys($world->getChunkEntities($chunkX, $chunkZ));
+                                    return array_search($entityID1, $chunkEntities, true) > array_search($entityID2, $chunkEntities, true) ? 1 : -1;
+                                }
+                            );
+                        }
                     }
                 }
             ),
