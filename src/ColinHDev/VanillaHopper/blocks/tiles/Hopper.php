@@ -36,6 +36,10 @@ class Hopper extends PMMP_Hopper {
         $this->lastTick = $lastTick;
     }
 
+    public function isScheduledForDelayedBlockUpdate() : bool {
+        return $this->transferCooldown > 0 && $this->lastTick !== null;
+    }
+
     /**
      * @return AxisAlignedBB[] | null
      */

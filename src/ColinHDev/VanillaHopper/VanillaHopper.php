@@ -4,6 +4,8 @@ namespace ColinHDev\VanillaHopper;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
+use ColinHDev\VanillaHopper\listeners\EntityDespawnListener;
+use ColinHDev\VanillaHopper\listeners\EntitySpawnListener;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier;
 use pocketmine\block\tile\TileFactory;
@@ -28,6 +30,9 @@ class VanillaHopper extends PluginBase {
         );
 
         TileFactory::getInstance()->register(TileHopper::class, ["Hopper", "minecraft:hopper"]);
+
+        $this->getServer()->getPluginManager()->registerEvents(new EntityDespawnListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new EntitySpawnListener(), $this);
     }
 
     public static function getInstance() : VanillaHopper {

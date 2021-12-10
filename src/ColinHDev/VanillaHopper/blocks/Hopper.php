@@ -3,6 +3,7 @@
 namespace ColinHDev\VanillaHopper\blocks;
 
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
+use ColinHDev\VanillaHopper\entities\ItemEntityManager;
 use ColinHDev\VanillaHopper\events\HopperPullContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
@@ -15,6 +16,7 @@ use pocketmine\block\Jukebox;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
+use pocketmine\entity\Entity;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\event\block\BlockItemPickupEvent;
 use pocketmine\item\Bucket;
@@ -64,10 +66,14 @@ class Hopper extends PMMP_Hopper {
                 $transferCooldown = ResourceManager::getInstance()->getDefaultTransferCooldown();
             }
         }
-        // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
-        $tile->setTransferCooldown(
-            BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown))
-        );
+        if ($transferCooldown === 0) {
+            $tile->setTransferCooldown(0);
+        } else {
+            // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
+            $tile->setTransferCooldown(
+                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown))
+            );
+        }
         $tile->setLastTick($currentTick);
     }
 
@@ -306,9 +312,16 @@ class Hopper extends PMMP_Hopper {
      */
     private function pickup(HopperInventory $inventory, array $pickupCollisionBoxes) : bool {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
+        /** @var array<int, ItemEntity> $entities */
+        $entities = ItemEntityManager::getInstance()->getEntitiesByHopper($this);
         foreach ($pickupCollisionBoxes as $pickupCollisionBox) {
-            foreach ($this->position->getWorld()->getNearbyEntities($pickupCollisionBox) as $entity) {
-                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) {
+            foreach ($entities as $entityID => $entity) {
+                if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
+                    unset($entities[$entityID]);
+                    ItemEntityManager::getInstance()->removeEntityFromHopper($this, $entity);
+                    continue;
+                }
+                if (!$entity->boundingBox->intersectsWith($pickupCollisionBox)) {
                     continue;
                 }
                 if ($itemsToTransfer <= 0) {
