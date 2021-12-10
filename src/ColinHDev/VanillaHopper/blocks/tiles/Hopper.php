@@ -25,9 +25,8 @@ class Hopper extends PMMP_Hopper {
     }
 
     public function setTransferCooldown(int $transferCooldown) : void {
-        $this->transferCooldown = $transferCooldown;
         // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
-        BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown));
+        $this->transferCooldown = BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown));
     }
 
     public function getLastTick() : ?int {
