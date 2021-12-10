@@ -316,25 +316,20 @@ class Hopper extends PMMP_Hopper {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
         /** @var array<int, ItemEntity> $entities */
         $entities = ItemEntityManager::getInstance()->getEntitiesByHopper($this);
-        foreach ($pickupCollisionBoxes as $pickupCollisionBox) {
-            foreach ($entities as $entityID => $entity) {
-                if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
-                    unset($entities[$entityID]);
-                    ItemEntityManager::getInstance()->removeEntityFromHopper($this, $entity);
-                    continue;
-                }
+        foreach ($entities as $entity) {
+            if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
+                ItemEntityManager::getInstance()->removeEntityFromHopper($this, $entity);
+                continue;
+            }
+            if ($itemsToTransfer <= 0) {
+                return true;
+            }
+            $item = $entity->getItem();
+            if (!$inventory->canAddItem($item)) {
+                continue;
+            }
+            foreach ($pickupCollisionBoxes as $pickupCollisionBox) {
                 if (!$entity->boundingBox->intersectsWith($pickupCollisionBox)) {
-                    continue;
-                }
-                if ($itemsToTransfer <= 0) {
-                    return true;
-                }
-                // Unlike Java Edition, Bedrock Edition's hoppers don't save in which order item entities landed on top of them to collect them in that order.
-                // In Bedrock Edition hoppers collect item entities in the order in which they entered the chunk.
-                // Because of how entities are saved by PocketMine-MP the first entities of this loop are also the first ones who were saved.
-                // That's why we don't need to implement any sorting mechanism.
-                $item = $entity->getItem();
-                if(!$inventory->canAddItem($item)){
                     continue;
                 }
 
@@ -346,7 +341,12 @@ class Hopper extends PMMP_Hopper {
 
                 $itemsToTransfer--;
                 $event->getInventory()->addItem($event->getItem());
-                $event->getOrigin()->flagForDespawn();
+                $origin = $event->getOrigin();
+                $origin->flagForDespawn();
+                if ($origin instanceof ItemEntity) {
+                    ItemEntityManager::getInstance()->removeEntityFromHopper($this, $origin);
+                }
+                continue 2;
             }
         }
         if ($itemsToTransfer !== 0 && $itemsToTransfer === ResourceManager::getInstance()->getItemsPerUpdate()) {
