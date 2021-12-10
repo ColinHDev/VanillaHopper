@@ -22,7 +22,7 @@ final class ItemEntityManager {
     private array $entities = [];
     /** @var array<int, Position> */
     private array $lastEntityPositions = [];
-    /** @var array<int, array<int, ItemEntity>> */
+    /** @var array<int, array<int, array<int, ItemEntity>>> */
     private array $entitiesByHopper = [];
 
     public function addItemEntity(ItemEntity $entity) : void {
@@ -42,17 +42,21 @@ final class ItemEntityManager {
      */
     public function getEntitiesByHopper(Hopper $block) : array {
         $position = $block->getPosition();
-        $blockHash = World::blockHash((int) floor($position->x), (int) floor($position->y), (int) floor($position->z));
-        if (!isset($this->entitiesByHopper[$blockHash])) {
+        $worldID = $position->world->getId();
+        if (!isset($this->entitiesByHopper[$worldID])) {
             return [];
         }
-        return $this->entitiesByHopper[$blockHash];
+        $blockHash = World::blockHash((int) floor($position->x), (int) floor($position->y), (int) floor($position->z));
+        if (!isset($this->entitiesByHopper[$worldID][$blockHash])) {
+            return [];
+        }
+        return $this->entitiesByHopper[$worldID][$blockHash];
     }
 
     public function removeEntityFromHopper(Hopper $block, ItemEntity $entity) : void {
         $position = $block->getPosition();
         $blockHash = World::blockHash((int) floor($position->x), (int) floor($position->y), (int) floor($position->z));
-        unset($this->entitiesByHopper[$blockHash][$entity->getId()]);
+        unset($this->entitiesByHopper[$position->world->getId()][$blockHash][$entity->getId()]);
     }
 
     public function scheduleTask() : void {
@@ -100,11 +104,15 @@ final class ItemEntityManager {
                             $tile->setScheduledForDelayedBlockUpdate(true);
                         }
 
-                        $blockHash = World::blockHash($position->x, $position->y, $position->z);
-                        if (!isset($this->entitiesByHopper[$blockHash])) {
-                            $this->entitiesByHopper[$blockHash] = [];
+                        $worldID = $position->world->getId();
+                        if (!isset($this->entitiesByHopper[$worldID])) {
+                            $this->entitiesByHopper[$worldID] = [];
                         }
-                        $this->entitiesByHopper[$blockHash][$entityID] = $entity;
+                        $blockHash = World::blockHash($position->x, $position->y, $position->z);
+                        if (!isset($this->entitiesByHopper[$worldID][$blockHash])) {
+                            $this->entitiesByHopper[$worldID][$blockHash] = [];
+                        }
+                        $this->entitiesByHopper[$worldID][$blockHash][$entityID] = $entity;
                     }
                 }
             ),
