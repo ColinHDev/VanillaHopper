@@ -32,9 +32,11 @@ class BlockUpdateScheduler {
             if ($this->currentTick !== $currentTick) {
                 $this->currentTick = $currentTick;
                 // Remove every tick of array that already happened.
-                // We can also remove the current tick because we can no longer schedule a block update for this current tick.
+                // We can't remove the current tick, as ItemEntityManager runs a scheduled task and as seeable in
+                // Server::tick(), are schedulers ticked before the world. Therefore it is still possible to schedule
+                // a block update for the current tick.
                 foreach ($this->updatesPerTick as $tick => $updates) {
-                    if ($tick <= $currentTick) {
+                    if ($tick < $currentTick) {
                         unset($this->updatesPerTick[$tick]);
                         continue;
                     }
