@@ -4,13 +4,20 @@ namespace ColinHDev\VanillaHopper;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
-use ColinHDev\VanillaHopper\listeners\EntityDespawnListener;
+use ColinHDev\VanillaHopper\entities\ItemEntity;
+use ColinHDev\VanillaHopper\listeners\EntityMotionListener;
 use ColinHDev\VanillaHopper\listeners\EntitySpawnListener;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier;
 use pocketmine\block\tile\TileFactory;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\data\bedrock\EntityLegacyIds;
+use pocketmine\entity\EntityDataHelper;
+use pocketmine\entity\EntityFactory;
+use pocketmine\item\Item;
+use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
+use pocketmine\world\World;
 
 class VanillaHopper extends PluginBase {
 
@@ -31,7 +38,25 @@ class VanillaHopper extends PluginBase {
 
         TileFactory::getInstance()->register(TileHopper::class, ["Hopper", "minecraft:hopper"]);
 
-        $this->getServer()->getPluginManager()->registerEvents(new EntityDespawnListener(), $this);
+        EntityFactory::getInstance()->register(
+            ItemEntity::class,
+            function (World $world, CompoundTag $nbt) : ItemEntity {
+                $itemTag = $nbt->getCompoundTag("Item");
+                if($itemTag === null){
+                    throw new \UnexpectedValueException("Expected \"Item\" NBT tag not found");
+                }
+
+                $item = Item::nbtDeserialize($itemTag);
+                if($item->isNull()){
+                    throw new \UnexpectedValueException("Item is invalid");
+                }
+                return new ItemEntity(EntityDataHelper::parseLocation($nbt, $world), $item, $nbt);
+            },
+            ['Item', 'minecraft:item'],
+            EntityLegacyIds::ITEM
+        );
+
+        $this->getServer()->getPluginManager()->registerEvents(new EntityMotionListener(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new EntitySpawnListener(), $this);
     }
 

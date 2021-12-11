@@ -16,7 +16,6 @@ use pocketmine\block\Jukebox;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
-use pocketmine\entity\Entity;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\event\block\BlockItemPickupEvent;
 use pocketmine\item\Bucket;
@@ -314,11 +313,10 @@ class Hopper extends PMMP_Hopper {
      */
     private function pickup(HopperInventory $inventory, array $pickupCollisionBoxes) : bool {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
-        /** @var array<int, ItemEntity> $entities */
-        $entities = ItemEntityManager::getInstance()->getEntitiesByHopper($this);
+        $entities = ItemEntityManager::getInstance()->getEntitiesByHopper($this->position);
         foreach ($entities as $entity) {
             if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
-                ItemEntityManager::getInstance()->removeEntityFromHopper($this, $entity);
+                ItemEntityManager::getInstance()->removeEntityFromHopper($this->position, $entity);
                 continue;
             }
             if ($itemsToTransfer <= 0) {
@@ -344,7 +342,7 @@ class Hopper extends PMMP_Hopper {
                 $origin = $event->getOrigin();
                 $origin->flagForDespawn();
                 if ($origin instanceof ItemEntity) {
-                    ItemEntityManager::getInstance()->removeEntityFromHopper($this, $origin);
+                    ItemEntityManager::getInstance()->removeEntityFromHopper($this->position, $origin);
                 }
                 continue 2;
             }
