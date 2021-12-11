@@ -3,9 +3,11 @@
 namespace ColinHDev\VanillaHopper\blocks\tiles;
 
 use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
+use ColinHDev\VanillaHopper\entities\ItemEntity;
 use pocketmine\block\tile\Hopper as PMMP_Hopper;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Vector3;
+use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
 
 class Hopper extends PMMP_Hopper {
@@ -15,6 +17,8 @@ class Hopper extends PMMP_Hopper {
     private bool $isScheduledForDelayedBlockUpdate = true;
     /** @var AxisAlignedBB[] | null */
     private ?array $pickupCollisionBoxes = null;
+    /** @var array<int, ItemEntity> */
+    private array $assignedEntities = [];
 
     public function __construct(World $world, Vector3 $pos) {
         parent::__construct($world, $pos);
@@ -61,5 +65,34 @@ class Hopper extends PMMP_Hopper {
      */
     public function setPickupCollisionBoxes(array $pickupCollisionBoxes) : void {
         $this->pickupCollisionBoxes = $pickupCollisionBoxes;
+    }
+
+    /**
+     * @return array<int, ItemEntity>
+     */
+    public function getAssignedEntities() : array {
+        return $this->assignedEntities;
+    }
+
+    public function addAssignedEntity(ItemEntity $entity) : void {
+        $this->assignedEntities[$entity->getId()] = $entity;
+        if (count($this->assignedEntities) > 1) {
+            // Unlike Java Edition, Bedrock Edition's hoppers don't save in which order item entities landed on top of them to collect them in that order.
+            // In Bedrock Edition hoppers collect item entities in the order in which they entered the chunk.
+            $world = $this->position->world;
+            $chunkX = $this->position->x >> Chunk::COORD_BIT_SIZE;
+            $chunkZ = $this->position->z >> Chunk::COORD_BIT_SIZE;
+            uksort(
+                $this->assignedEntities,
+                function (int $entityID1, int $entityID2) use ($world, $chunkX, $chunkZ) : int {
+                    $chunkEntities = array_keys($world->getChunkEntities($chunkX, $chunkZ));
+                    return array_search($entityID1, $chunkEntities, true) > array_search($entityID2, $chunkEntities, true) ? 1 : -1;
+                }
+            );
+        }
+    }
+
+    public function removeAssignedEntity(ItemEntity $entity) : void {
+        unset($this->assignedEntities[$entity->getId()]);
     }
 }

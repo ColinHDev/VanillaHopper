@@ -40,6 +40,6 @@ class ItemEntity extends PMMPItemEntity {
             $tile->setScheduledForDelayedBlockUpdate(true);
         }
 
-        ItemEntityManager::getInstance()->addEntityToHopper($position, $this);
+        $tile->addAssignedEntity($this);
     }
 }

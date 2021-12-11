@@ -3,7 +3,6 @@
 namespace ColinHDev\VanillaHopper\blocks;
 
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
-use ColinHDev\VanillaHopper\entities\ItemEntityManager;
 use ColinHDev\VanillaHopper\events\HopperPullContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
@@ -51,14 +50,7 @@ class Hopper extends PMMP_Hopper {
             if ($origin !== null) {
                 $success = $this->pull($inventory, $origin) || $success;
             } else {
-                // We don't need to reconstruct the collision boxes every time the hopper is updated.
-                // That's why we store it in the tile.
-                $pickupCollisionBoxes = $tile->getPickupCollisionBoxes();
-                if ($pickupCollisionBoxes === null) {
-                    $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
-                    $tile->setPickupCollisionBoxes($pickupCollisionBoxes);
-                }
-                $success = $this->pickup($inventory, $pickupCollisionBoxes) || $success;
+                $success = $this->pickup($inventory, $tile) || $success;
             }
             // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
             if ($success) {
@@ -309,14 +301,19 @@ class Hopper extends PMMP_Hopper {
     /**
      * This function handles picking up items by the hopper.
      * Returns true if an item was successfully picked up or false on failure.
-     * @param AxisAlignedBB[] $pickupCollisionBoxes
      */
-    private function pickup(HopperInventory $inventory, array $pickupCollisionBoxes) : bool {
+    private function pickup(HopperInventory $inventory, TileHopper $tile) : bool {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
-        $entities = ItemEntityManager::getInstance()->getEntitiesByHopper($this->position);
-        foreach ($entities as $entity) {
+        // We don't need to reconstruct the collision boxes every time the hopper is updated.
+        // That's why we store it in the tile.
+        $pickupCollisionBoxes = $tile->getPickupCollisionBoxes();
+        if ($pickupCollisionBoxes === null) {
+            $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
+            $tile->setPickupCollisionBoxes($pickupCollisionBoxes);
+        }
+        foreach ($tile->getAssignedEntities() as $entity) {
             if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
-                ItemEntityManager::getInstance()->removeEntityFromHopper($this->position, $entity);
+                $tile->removeAssignedEntity($entity);
                 continue;
             }
             if ($itemsToTransfer <= 0) {
@@ -342,7 +339,7 @@ class Hopper extends PMMP_Hopper {
                 $origin = $event->getOrigin();
                 $origin->flagForDespawn();
                 if ($origin instanceof ItemEntity) {
-                    ItemEntityManager::getInstance()->removeEntityFromHopper($this->position, $origin);
+                    $tile->removeAssignedEntity($entity);
                 }
                 continue 2;
             }
