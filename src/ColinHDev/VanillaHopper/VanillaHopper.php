@@ -7,6 +7,11 @@ use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
 use ColinHDev\VanillaHopper\entities\ItemEntity;
 use ColinHDev\VanillaHopper\listeners\EntityMotionListener;
 use ColinHDev\VanillaHopper\listeners\EntitySpawnListener;
+use ColinHDev\VanillaHopper\listeners\FurnaceBurnListener;
+use ColinHDev\VanillaHopper\listeners\FurnaceSmeltListener;
+use ColinHDev\VanillaHopper\listeners\HopperPullListener;
+use ColinHDev\VanillaHopper\listeners\HopperPushListener;
+use ColinHDev\VanillaHopper\listeners\InventoryTransactionListener;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier;
 use pocketmine\block\tile\TileFactory;
@@ -58,6 +63,11 @@ class VanillaHopper extends PluginBase {
 
         $this->getServer()->getPluginManager()->registerEvents(new EntityMotionListener(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new EntitySpawnListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new FurnaceBurnListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new FurnaceSmeltListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new HopperPullListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new HopperPushListener(), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new InventoryTransactionListener(), $this);
     }
 
     public static function getInstance() : VanillaHopper {
