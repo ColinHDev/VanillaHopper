@@ -2,8 +2,7 @@
 
 namespace ColinHDev\VanillaHopper\listeners;
 
-use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
-use ColinHDev\VanillaHopper\blocks\tiles\Hopper;
+use ColinHDev\VanillaHopper\blocks\Hopper;
 use pocketmine\event\inventory\FurnaceBurnEvent;
 use pocketmine\event\Listener;
 use pocketmine\math\Facing;
@@ -28,16 +27,9 @@ class FurnaceBurnListener implements Listener {
     public function onFurnaceBurn(FurnaceBurnEvent $event) : void {
         $position = $event->getFurnace()->getPosition();
         foreach (self::FACINGS as $facing) {
-            $vector3 = $position->getSide($facing);
-            $tile = $position->world->getTile($vector3);
-            if (!$tile instanceof Hopper) {
-                continue;
-            }
-            if (!$tile->isScheduledForDelayedBlockUpdate()) {
-                $tile->setTransferCooldown(
-                    BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($position->world, $vector3, 1)
-                );
-                $tile->setScheduledForDelayedBlockUpdate(true);
+            $block = $position->world->getBlock($position->getSide($facing));
+            if ($block instanceof Hopper) {
+                $block->scheduleDelayedBlockUpdate(1);
             }
         }
     }

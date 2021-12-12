@@ -2,8 +2,7 @@
 
 namespace ColinHDev\VanillaHopper\listeners;
 
-use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
-use ColinHDev\VanillaHopper\blocks\tiles\Hopper;
+use ColinHDev\VanillaHopper\blocks\Hopper;
 use pocketmine\block\inventory\BlockInventory;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
@@ -15,15 +14,9 @@ class InventoryTransactionListener implements Listener {
             if ($inventory instanceof BlockInventory) {
                 $position = $inventory->getHolder();
                 foreach (array_merge([-1 => $position->asVector3()], $position->sidesArray()) as $vector3) {
-                    $tile = $position->world->getTile($vector3);
-                    if (!$tile instanceof Hopper) {
-                        continue;
-                    }
-                    if (!$tile->isScheduledForDelayedBlockUpdate()) {
-                        $tile->setTransferCooldown(
-                            BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($position->world, $vector3, 1)
-                        );
-                        $tile->setScheduledForDelayedBlockUpdate(true);
+                    $block = $position->world->getBlock($vector3);
+                    if ($block instanceof Hopper) {
+                        $block->scheduleDelayedBlockUpdate(1);
                     }
                 }
             }

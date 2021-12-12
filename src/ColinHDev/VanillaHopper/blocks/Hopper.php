@@ -9,7 +9,7 @@ use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
 use ColinHDev\VanillaHopper\ResourceManager;
 use pocketmine\block\Block;
-use pocketmine\block\Hopper as PMMP_Hopper;
+use pocketmine\block\Hopper as PMMPHopper;
 use pocketmine\block\inventory\FurnaceInventory;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\Jukebox;
@@ -22,7 +22,17 @@ use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 
-class Hopper extends PMMP_Hopper {
+class Hopper extends PMMPHopper {
+
+    public function scheduleDelayedBlockUpdate(int $transferCooldown) : void {
+        $tile = $this->position->getWorld()->getTile($this->position);
+        if ($tile instanceof TileHopper && !$tile->isScheduledForDelayedBlockUpdate()) {
+            $tile->setTransferCooldown(
+                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, $transferCooldown)
+            );
+            $tile->setScheduledForDelayedBlockUpdate(true);
+        }
+    }
 
     public function onScheduledUpdate() : void {
         $tile = $this->position->getWorld()->getTile($this->position);
@@ -62,10 +72,7 @@ class Hopper extends PMMP_Hopper {
             $tile->setScheduledForDelayedBlockUpdate(false);
         } else {
             // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
-            $tile->setTransferCooldown(
-                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, max(1, $transferCooldown))
-            );
-            $tile->setScheduledForDelayedBlockUpdate(true);
+            $this->scheduleDelayedBlockUpdate(max(1, $transferCooldown));
         }
         $tile->setLastTick($currentTick);
     }

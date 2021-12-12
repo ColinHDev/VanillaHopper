@@ -2,9 +2,8 @@
 
 namespace ColinHDev\VanillaHopper\entities;
 
-use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
-use ColinHDev\VanillaHopper\blocks\Hopper;
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
+use ColinHDev\VanillaHopper\blocks\Hopper;
 use pocketmine\entity\object\ItemEntity as PMMPItemEntity;
 use pocketmine\item\Item;
 
@@ -22,27 +21,18 @@ class ItemEntity extends PMMPItemEntity {
             }
         }
 
-        $tile = $this->location->world->getTile($this->location);
-        if (!$tile instanceof TileHopper) {
-            $tile = $this->location->world->getTile($this->location->down());
-            if (!$tile instanceof TileHopper) {
+        $block = $this->location->world->getBlock($this->location);
+        if (!$block instanceof Hopper) {
+            $block = $this->location->world->getBlock($this->location->down());
+            if (!$block instanceof Hopper) {
                 return;
             }
         }
-        $position = $tile->getPosition();
-
-        if (!$tile->isScheduledForDelayedBlockUpdate()) {
-            $tile->setTransferCooldown(
-                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate(
-                    $position->world,
-                    $position,
-                    0
-                )
-            );
-            $tile->setScheduledForDelayedBlockUpdate(true);
+        $tile = $this->location->world->getTile($block->getPosition());
+        if ($tile instanceof TileHopper) {
+            $block->scheduleDelayedBlockUpdate(0);
+            $tile->addAssignedEntity($this);
         }
-
-        $tile->addAssignedEntity($this);
     }
 
     /**
