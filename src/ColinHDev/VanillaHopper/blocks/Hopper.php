@@ -21,7 +21,6 @@ use pocketmine\item\Bucket;
 use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
-use pocketmine\math\Vector3;
 
 class Hopper extends PMMP_Hopper {
 
