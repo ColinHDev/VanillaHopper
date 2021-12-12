@@ -9,6 +9,10 @@ use pocketmine\event\Listener;
 
 class EntitySpawnListener implements Listener {
 
+    /**
+     * We want this listener to be executed as late as possible so that our hack does not affect any plugins.
+     * @priority MONITOR
+     */
     public function onEntitySpawn(EntitySpawnEvent $event) : void {
         $entity = $event->getEntity();
         if ($entity instanceof PMMPItemEntity && !$entity instanceof ItemEntity) {

@@ -9,6 +9,12 @@ use pocketmine\event\Listener;
 
 class EntityMotionListener implements Listener {
 
+    /**
+     * We want this listener to still be executed even if the event was cancelled so that we can reverse our hack.
+     * @handleCancelled true
+     * We want this listener to be executed as soon as possible so that our hack does not affect any plugins.
+     * @priority LOWEST
+     */
     public function onEntityMotion(EntityMotionEvent $event) : void {
         $entity = $event->getEntity();
         if ($entity instanceof PMMPItemEntity && !$entity instanceof ItemEntity) {
