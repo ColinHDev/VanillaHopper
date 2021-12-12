@@ -3,6 +3,7 @@
 namespace ColinHDev\VanillaHopper\blocks;
 
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
+use ColinHDev\VanillaHopper\entities\ItemEntity;
 use ColinHDev\VanillaHopper\events\HopperPullContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
@@ -15,12 +16,12 @@ use pocketmine\block\Jukebox;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
-use pocketmine\entity\object\ItemEntity;
 use pocketmine\event\block\BlockItemPickupEvent;
 use pocketmine\item\Bucket;
 use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
+use pocketmine\math\Vector3;
 
 class Hopper extends PMMP_Hopper {
 
@@ -320,7 +321,9 @@ class Hopper extends PMMP_Hopper {
                 return true;
             }
             $item = $entity->getItem();
-            if (!$inventory->canAddItem($item)) {
+            // We use Inventory::getAddableItemQuantity() in favour of Inventory::canAddItem() since we just want to
+            // check if at least one item can be added to the inventory, not if the entire item can be added.
+            if ($inventory->getAddableItemQuantity($item) <= 0) {
                 continue;
             }
             foreach ($pickupCollisionBoxes as $pickupCollisionBox) {
@@ -335,12 +338,28 @@ class Hopper extends PMMP_Hopper {
                 }
 
                 $itemsToTransfer--;
-                $event->getInventory()->addItem($event->getItem());
-                $origin = $event->getOrigin();
-                $origin->flagForDespawn();
-                if ($origin instanceof ItemEntity) {
-                    $tile->removeAssignedEntity($entity);
+                $eventInventory = $event->getInventory();
+                if ($eventInventory !== null) {
+                    // During testing in vanilla, it was shown that if a hopper picks up just the part of an item
+                    // entity, it will later, if there is space again in its inventory, pick that item entity up in
+                    // favour of other, later dropped entities.
+                    // Because of that, we can't despawn the old entity and spawn a new one, since that would result in
+                    // the entity being ordered as the newest entity that entered the chunk. So we need to update the
+                    // item of the item entity.
+                    /** @link ItemEntity::setItem() */
+                    $remains = $eventInventory->addItem($event->getItem());
+                    // If $remains is empty, it means that the entire item could be added to the inventory. Only if that
+                    // is not the case, we need to update the item of the entity, otherwise, we can just despawn it.
+                    if (!empty($remains)) {
+                        // We can just use the first element in the array since while Inventory::addItem() returns an
+                        // array, it will do that based on the number of arguments provided. Since we only provide one
+                        // item as an argument, we can only expect one item in the array to be returned.
+                        $entity->setItem($remains[0]);
+                        continue 2;
+                    }
                 }
+                $tile->removeAssignedEntity($entity);
+                $entity->flagForDespawn();
                 continue 2;
             }
         }

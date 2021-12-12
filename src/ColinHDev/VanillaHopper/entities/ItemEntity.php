@@ -3,8 +3,10 @@
 namespace ColinHDev\VanillaHopper\entities;
 
 use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
+use ColinHDev\VanillaHopper\blocks\Hopper;
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
 use pocketmine\entity\object\ItemEntity as PMMPItemEntity;
+use pocketmine\item\Item;
 
 class ItemEntity extends PMMPItemEntity {
 
@@ -41,5 +43,22 @@ class ItemEntity extends PMMPItemEntity {
         }
 
         $tile->addAssignedEntity($this);
+    }
+
+    /**
+     * Set the item of the item entity.
+     * We need this method to change the item entity's item when part of it was picked up by a hopper. We can't just
+     * spawn a new entity then, as that new entity would have "entered" the chunk after all other entities. But during
+     * testing in vanilla, it was shown, that those partly picked up entities are still favoured by hoppers when picking
+     * up items than other entities.
+     * @link Hopper::pickup()
+     */
+    public function setItem(Item $item) : void {
+        $this->item = clone $item;
+        // Hack: When the item changes, we want all clients to see that, as the item could be a completely different one
+        // because BlockItemPickupEvent's setItem() method provides the ability to completely change the item.
+        // That's why we despawn and then respawn the entity to all of its viewers again.
+        $this->despawnFromAll();
+        $this->spawnToAll();
     }
 }
