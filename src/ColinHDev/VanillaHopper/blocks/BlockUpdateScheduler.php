@@ -7,7 +7,7 @@ use pocketmine\math\Vector3;
 use pocketmine\utils\SingletonTrait;
 use pocketmine\world\World;
 
-class BlockUpdateScheduler {
+final class BlockUpdateScheduler {
     use SingletonTrait;
 
     private int $currentTick = 0;
