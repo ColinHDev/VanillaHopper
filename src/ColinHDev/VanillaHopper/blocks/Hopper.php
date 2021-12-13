@@ -42,16 +42,14 @@ class Hopper extends PMMPHopper {
             return;
         }
 
-        $transferCooldown = $tile->getTransferCooldown();
         $currentTick = $this->position->getWorld()->getServer()->getTick();
-        if ($transferCooldown > 0) {
-            $transferCooldown = max(
-                0,
-                $transferCooldown - ($currentTick - ($tile->getLastTick() ?? ($currentTick - 1)))
-            );
-        }
-
-        if (!$this->isPowered() && $transferCooldown <= 0) {
+        $transferCooldown = max(
+            0,
+            $tile->getTransferCooldown() - ($currentTick - ($tile->getLastTick() ?? ($currentTick - 1)))
+        );
+        $tile->setLastTick($currentTick);
+        $tile->setScheduledForDelayedBlockUpdate(false);
+        if (!$this->isPowered() && $transferCooldown === 0) {
             $inventory = $tile->getInventory();
             $success = $this->push($inventory);
             // Hoppers that have a block above them from which they can pull from, won't try to pick up items.
@@ -69,12 +67,10 @@ class Hopper extends PMMPHopper {
         }
         if ($transferCooldown === 0) {
             $tile->setTransferCooldown(0);
-            $tile->setScheduledForDelayedBlockUpdate(false);
         } else {
             // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
-            $this->scheduleDelayedBlockUpdate(max(1, $transferCooldown));
+            $this->scheduleDelayedBlockUpdate($transferCooldown);
         }
-        $tile->setLastTick($currentTick);
     }
 
     /**
