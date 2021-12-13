@@ -34,6 +34,12 @@ class Hopper extends PMMPHopper {
         }
     }
 
+    public function onNearbyBlockChange() : void {
+        // If a block changed nearby, we schedule a block update, so that hoppers react properly e.g. when a container
+        // is placed nearby.
+        $this->scheduleDelayedBlockUpdate(1);
+    }
+
     public function onScheduledUpdate() : void {
         $tile = $this->position->getWorld()->getTile($this->position);
         if (!$tile instanceof TileHopper) {
