@@ -315,11 +315,7 @@ class Hopper extends PMMPHopper {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
         // We don't need to reconstruct the collision boxes every time the hopper is updated.
         // That's why we store it in the tile.
-        $pickupCollisionBoxes = $tile->getPickupCollisionBoxes();
-        if ($pickupCollisionBoxes === null) {
-            $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
-            $tile->setPickupCollisionBoxes($pickupCollisionBoxes);
-        }
+        $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
         foreach ($tile->getAssignedEntities() as $entity) {
             if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
                 $tile->removeAssignedEntity($entity);
@@ -386,23 +382,23 @@ class Hopper extends PMMPHopper {
 
         // In Bedrock Edition hoppers collect from the lower 3/4 of the block space above them.
         $pickupCollisionBoxes[] = new AxisAlignedBB(
-            $this->position->getX(),
-            $this->position->getY() + 1,
-            $this->position->getZ(),
-            $this->position->getX() + 1,
-            $this->position->getY() + 1.75,
-            $this->position->getZ() + 1
+            $this->position->x,
+            $this->position->y + 1,
+            $this->position->z,
+            $this->position->x + 1,
+            $this->position->y + 1.75,
+            $this->position->z + 1
         );
 
         // Hoppers can also collect from their bowl.
         // Its bottom is 6 pixels below the space above the hopper and trimmed by 3 pixels in each horizontal direction.
         $pickupCollisionBoxes[] = new AxisAlignedBB(
-            $this->position->getX() + 3 / 16,
-            $this->position->getY() + 10 / 16,
-            $this->position->getZ() + 3 / 16,
-            $this->position->getX() + 13 / 16,
-            $this->position->getY() + 1,
-            $this->position->getZ() + 13 / 16
+            $this->position->x + 3 / 16,
+            $this->position->y + 10 / 16,
+            $this->position->z + 3 / 16,
+            $this->position->x + 13 / 16,
+            $this->position->y + 1,
+            $this->position->z + 13 / 16
         );
 
         return $pickupCollisionBoxes;

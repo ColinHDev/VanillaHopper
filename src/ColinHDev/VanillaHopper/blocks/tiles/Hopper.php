@@ -15,8 +15,6 @@ class Hopper extends PMMP_Hopper {
     private int $transferCooldown = 0;
     private ?int $lastTick = null;
     private bool $isScheduledForDelayedBlockUpdate = true;
-    /** @var AxisAlignedBB[] | null */
-    private ?array $pickupCollisionBoxes = null;
     /** @var array<int, ItemEntity> */
     private array $assignedEntities = [];
 
@@ -51,20 +49,6 @@ class Hopper extends PMMP_Hopper {
 
     public function setScheduledForDelayedBlockUpdate(bool $isScheduledForDelayedBlockUpdate) : void {
         $this->isScheduledForDelayedBlockUpdate = $isScheduledForDelayedBlockUpdate;
-    }
-
-    /**
-     * @return AxisAlignedBB[] | null
-     */
-    public function getPickupCollisionBoxes() : ?array {
-        return $this->pickupCollisionBoxes;
-    }
-
-    /**
-     * @param AxisAlignedBB[] $pickupCollisionBoxes
-     */
-    public function setPickupCollisionBoxes(array $pickupCollisionBoxes) : void {
-        $this->pickupCollisionBoxes = $pickupCollisionBoxes;
     }
 
     /**
