@@ -313,8 +313,6 @@ class Hopper extends PMMPHopper {
     private function pickup(HopperInventory $inventory) : bool {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
         $blockDataStorer = BlockDataStorer::getInstance();
-        // We don't need to reconstruct the collision boxes every time the hopper is updated.
-        // That's why we store it in the tile.
         $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
         foreach ($blockDataStorer->getAssignedEntities($this->position) as $entity) {
             if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
