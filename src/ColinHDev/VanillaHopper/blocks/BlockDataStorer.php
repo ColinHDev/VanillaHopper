@@ -173,15 +173,7 @@ final class BlockDataStorer {
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         unset($this->assignedEntities[$worldID][$chunkHash][$relativeBlockHash][$entity->getId()]);
-        if (count($this->assignedEntities[$worldID][$chunkHash][$relativeBlockHash]) === 0) {
-            unset($this->assignedEntities[$worldID][$chunkHash][$relativeBlockHash]);
-            if (count($this->assignedEntities[$worldID][$chunkHash]) === 0) {
-                unset($this->assignedEntities[$worldID][$chunkHash]);
-                if (count($this->assignedEntities[$worldID]) === 0) {
-                    unset($this->assignedEntities[$worldID]);
-                }
-            }
-        }
+        $this->cleanArrays();
     }
 
     /**
@@ -192,26 +184,9 @@ final class BlockDataStorer {
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         unset($this->lastTicks[$worldID][$chunkHash][$relativeBlockHash]);
-        if (count($this->lastTicks[$worldID][$chunkHash]) === 0) {
-            unset($this->lastTicks[$worldID][$chunkHash]);
-            if (count($this->lastTicks[$worldID]) === 0) {
-                unset($this->lastTicks[$worldID]);
-            }
-        }
         unset($this->nextTicks[$worldID][$chunkHash][$relativeBlockHash]);
-        if (count($this->nextTicks[$worldID][$chunkHash]) === 0) {
-            unset($this->nextTicks[$worldID][$chunkHash]);
-            if (count($this->nextTicks[$worldID]) === 0) {
-                unset($this->nextTicks[$worldID]);
-            }
-        }
         unset($this->assignedEntities[$worldID][$chunkHash][$relativeBlockHash]);
-        if (count($this->assignedEntities[$worldID][$chunkHash]) === 0) {
-            unset($this->assignedEntities[$worldID][$chunkHash]);
-            if (count($this->assignedEntities[$worldID]) === 0) {
-                unset($this->assignedEntities[$worldID]);
-            }
-        }
+        $this->cleanArrays();
     }
 
     /**
@@ -221,17 +196,9 @@ final class BlockDataStorer {
         $worldID = $world->getId();
         $chunkHash = World::chunkHash($chunkX, $chunkZ);
         unset($this->lastTicks[$worldID][$chunkHash]);
-        if (count($this->assignedEntities[$worldID]) === 0) {
-            unset($this->assignedEntities[$worldID]);
-        }
         unset($this->nextTicks[$worldID][$chunkHash]);
-        if (count($this->nextTicks[$worldID]) === 0) {
-            unset($this->nextTicks[$worldID]);
-        }
         unset($this->assignedEntities[$worldID][$chunkHash]);
-        if (count($this->assignedEntities[$worldID]) === 0) {
-            unset($this->assignedEntities[$worldID]);
-        }
+        $this->cleanArrays();
     }
 
     /**
@@ -242,5 +209,54 @@ final class BlockDataStorer {
         unset($this->lastTicks[$worldID]);
         unset($this->nextTicks[$worldID]);
         unset($this->assignedEntities[$worldID]);
+    }
+
+    /**
+     * As this class holds multiple multi-dimensional arrays of various data, there could be single empty arrays
+     * inside them.
+     * This method cleans all of our arrays from those.
+     */
+    public function cleanArrays() : void {
+        foreach ($this->lastTicks as $worldID => &$chunks) {
+            foreach ($chunks as $chunkHash => $blocks) {
+                if (count($blocks) === 0) {
+                    unset($chunks[$chunkHash]);
+                }
+            }
+            if (count($chunks) === 0) {
+                unset($this->lastTicks[$worldID]);
+            }
+        }
+        unset($chunks);
+
+        foreach ($this->nextTicks as $worldID => &$chunks) {
+            foreach ($chunks as $chunkHash => $blocks) {
+                if (count($blocks) === 0) {
+                    unset($chunks[$chunkHash]);
+                }
+            }
+            if (count($chunks) === 0) {
+                unset($this->nextTicks[$worldID]);
+            }
+        }
+        unset($chunks);
+
+        foreach ($this->assignedEntities as $worldID => &$chunks) {
+            foreach ($chunks as $chunkHash => &$blocks) {
+                foreach ($blocks as $blockHash => $entities) {
+                    if (count($entities) === 0) {
+                        unset($blocks[$blockHash]);
+                    }
+                }
+                if (count($blocks) === 0) {
+                    unset($chunks[$chunkHash]);
+                }
+            }
+            unset($blocks);
+            if (count($chunks) === 0) {
+                unset($this->assignedEntities[$worldID]);
+            }
+        }
+        unset($chunks);
     }
 }
