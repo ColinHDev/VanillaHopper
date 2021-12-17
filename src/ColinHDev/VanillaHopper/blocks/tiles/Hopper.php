@@ -3,7 +3,7 @@
 namespace ColinHDev\VanillaHopper\blocks\tiles;
 
 use ColinHDev\VanillaHopper\blocks\BlockDataStorer;
-use ColinHDev\VanillaHopper\blocks\BlockUpdateScheduler;
+use ColinHDev\VanillaHopper\blocks\Hopper as HopperBlock;
 use pocketmine\block\tile\Hopper as PMMPHopper;
 use pocketmine\nbt\tag\CompoundTag;
 
@@ -21,7 +21,10 @@ class Hopper extends PMMPHopper {
 
     public function readSaveData(CompoundTag $nbt) : void {
         parent::readSaveData($nbt);
-        BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, $this->transferCooldown);
+        $block = $this->getBlock();
+        if ($block instanceof HopperBlock) {
+            $block->scheduleDelayedBlockUpdate($this->transferCooldown);
+        }
     }
 
     public function close() : void {
