@@ -40,6 +40,21 @@ Still, I wanted to use that logic in a plugin to use it myself and therefore I c
   - 128 hoppers pushing 27 * 64 dirt from one chest to another ([Timings](https://timings.pmmp.io/?id=158627)):
     ![Performance Test](https://user-images.githubusercontent.com/54852588/131256515-3611c594-08e1-45a1-8bd2-3ebbaf141c8a.png)
 
+### TODO
+#### Make pushing and pulling more modular
+Currently, the pushing and pulling methods are not very developer friendly when it comes to customizations, since it is hard to access and overwrite the `Hopper::push()` and `Hopper::pull()` methods without beeing forced to copy code.
+This could be done by implementing a behaviour system which lets developers register custom behaviours for any block.
+Since this would include rewriting some parts of the existing core, which would cost much time, what I do not see benefitial at the moment, PLEASE create an issue, if you find yourself needing a better implementation. Till then, this will stay as a TODO.
+
+#### Implementing entity pulling
+Normally, hoppers can not only pull items from blocks, but from entities like minecarts too.
+But since PocketMine-MP does not support them, there is no point in implementing this, since this would be out of the scope of this plugin.
+Although it should be at least possible to let hoppers also scan for entities when pulling, which is not possible with the current system.
+
+#### Supporting more blocks
+Composters, Brewing Stands and Jukeboxes are currently either not or just poorly supported. This should be changed.
+But since PocketMine-MP itself does not implement these blocks correctly, there is no reason for us at the moment of writing this.
+
 ### For developers
 #### Event handling
 - Through the different events, you can easily implement your own rules for hoppers.
