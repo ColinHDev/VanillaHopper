@@ -21,16 +21,16 @@ use pocketmine\item\Bucket;
 use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
+use pocketmine\Server;
 
 class Hopper extends PMMPHopper {
 
     public function scheduleDelayedBlockUpdate(int $transferCooldown) : void {
-        $tile = $this->position->getWorld()->getTile($this->position);
-        if ($tile instanceof TileHopper && !$tile->isScheduledForDelayedBlockUpdate()) {
-            $tile->setTransferCooldown(
-                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, $transferCooldown)
+        if (BlockDataStorer::getInstance()->getNextTick($this->position) === null) {
+            BlockDataStorer::getInstance()->setNextTick(
+                $this->position,
+                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->world, $this->position, $transferCooldown) + Server::getInstance()->getTick()
             );
-            $tile->setScheduledForDelayedBlockUpdate(true);
         }
     }
 
@@ -48,13 +48,13 @@ class Hopper extends PMMPHopper {
             return;
         }
 
-        $currentTick = $this->position->getWorld()->getServer()->getTick();
+        $currentTick = Server::getInstance()->getTick();
         $transferCooldown = max(
             0,
-            $tile->getTransferCooldown() - ($currentTick - ($tile->getLastTick() ?? ($currentTick - 1)))
+            $tile->getTransferCooldown() - ($currentTick - (BlockDataStorer::getInstance()->getLastTick($this->position) ?? ($currentTick - 1)))
         );
-        $tile->setLastTick($currentTick);
-        $tile->setScheduledForDelayedBlockUpdate(false);
+        BlockDataStorer::getInstance()->setLastTick($this->position, $currentTick);
+        BlockDataStorer::getInstance()->setNextTick($this->position, null);
         if (!$this->isPowered() && $transferCooldown === 0) {
             $inventory = $tile->getInventory();
             $success = $this->push($inventory);
@@ -64,16 +64,15 @@ class Hopper extends PMMPHopper {
             if ($origin !== null) {
                 $success = $this->pull($inventory, $origin) || $success;
             } else {
-                $success = $this->pickup($inventory, $tile) || $success;
+                $success = $this->pickup($inventory) || $success;
             }
             // The cooldown is only set back to the default amount of ticks if the hopper has done anything.
             if ($success) {
                 $transferCooldown = ResourceManager::getInstance()->getDefaultTransferCooldown();
             }
         }
-        if ($transferCooldown === 0) {
-            $tile->setTransferCooldown(0);
-        } else {
+        $tile->setTransferCooldown($transferCooldown);
+        if ($transferCooldown > 0) {
             // TODO: The number of items the hopper is pushing, pulling or picking up should depend on the actual delay and not on the preferred.
             $this->scheduleDelayedBlockUpdate($transferCooldown);
         }
@@ -311,14 +310,15 @@ class Hopper extends PMMPHopper {
      * This function handles picking up items by the hopper.
      * Returns true if an item was successfully picked up or false on failure.
      */
-    private function pickup(HopperInventory $inventory, TileHopper $tile) : bool {
+    private function pickup(HopperInventory $inventory) : bool {
         $itemsToTransfer = ResourceManager::getInstance()->getItemsPerUpdate();
+        $blockDataStorer = BlockDataStorer::getInstance();
         // We don't need to reconstruct the collision boxes every time the hopper is updated.
         // That's why we store it in the tile.
         $pickupCollisionBoxes = $this->getPickupCollisionBoxes();
-        foreach ($tile->getAssignedEntities() as $entity) {
+        foreach ($blockDataStorer->getAssignedEntities($this->position) as $entity) {
             if ($entity->isClosed() || $entity->isFlaggedForDespawn()) {
-                $tile->removeAssignedEntity($entity);
+                $blockDataStorer->unassignEntity($this->position, $entity);
                 continue;
             }
             if ($itemsToTransfer <= 0) {
@@ -362,7 +362,7 @@ class Hopper extends PMMPHopper {
                         continue 2;
                     }
                 }
-                $tile->removeAssignedEntity($entity);
+                $blockDataStorer->unassignEntity($this->position, $entity);
                 $entity->flagForDespawn();
                 continue 2;
             }

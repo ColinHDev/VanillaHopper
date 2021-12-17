@@ -2,7 +2,7 @@
 
 namespace ColinHDev\VanillaHopper\entities;
 
-use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
+use ColinHDev\VanillaHopper\blocks\BlockDataStorer;
 use ColinHDev\VanillaHopper\blocks\Hopper;
 use pocketmine\entity\object\ItemEntity as PMMPItemEntity;
 use pocketmine\item\Item;
@@ -28,11 +28,8 @@ class ItemEntity extends PMMPItemEntity {
                 return;
             }
         }
-        $tile = $this->location->world->getTile($block->getPosition());
-        if ($tile instanceof TileHopper) {
-            $block->scheduleDelayedBlockUpdate(0);
-            $tile->addAssignedEntity($this);
-        }
+        $block->scheduleDelayedBlockUpdate(0);
+        BlockDataStorer::getInstance()->assignEntity($block->getPosition(), $this);
     }
 
     /**
