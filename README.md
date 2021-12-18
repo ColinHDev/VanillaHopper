@@ -62,6 +62,7 @@ Composters, Brewing Stands and Jukeboxes are currently either not or just poorly
 But since PocketMine-MP itself does not implement these blocks correctly, there is no reason for us at the moment of writing this.
 
 ### For developers
+
 #### Event handling
 - Through the different events, you can easily implement your own rules for hoppers.
   Handle these events by simply creating an ordinary listener (`class EventListener implements Listener`) in your plugin and import (`use` keyword) them by their namespace (`event name`: `namespace`).
@@ -79,3 +80,8 @@ But since PocketMine-MP itself does not implement these blocks correctly, there 
   - This event is called when a hopper tries to pull an item.
 - `HopperPullContainerEvent`: `ColinHDev\VanillaHopper\events\HopperPullContainerEvent`
   - This event is called when a hopper tries to pull an item from a block's inventory.
+
+#### Custom ItemEntity class
+As there is no `EntityMoveEvent`, which can easily be listened for, a way to check whether an item entity moved onto a hopper had to be found.
+This was done by implementing a custom item entity class that checks only when the entity actually moved. Otherwise, we would have to make a task that constantly checks all item entities and if they moved.
+So this method has the most performance benefits. But this method makes this plugin incompatible with other plugins that implement a custom item entity class, as either this or the other plugin will no longer work as intended anymore.
