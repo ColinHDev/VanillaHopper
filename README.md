@@ -3,9 +3,15 @@ In pm4, hopper blocks were implemented to have an inventory. But the logic for p
 This plugin aims to add this logic to the hopper.
 
 ### Optimizations
+#### Improved block update scheduling
 Normally a hopper should run a block update every tick to reduce and check its cooldown if it has expired.
 Because it is highly inefficient to update all loaded hoppers every tick, just for letting them reduce their cooldown by one, the block update of hoppers is always scheduled to the expiration of their cooldown and not directly the next tick.
 To prevent any issues with the cooldown, hoppers are saving in which tick they were lastly updated to prevent them from updating too early.
+
+#### Event-driven hoppers
+If a hopper did anything, it will be set on transfer cooldown and as explained above, its next update will be on the tick of the transfer. But if the hopper did nothing, it wouldn't be on cooldown and therefore would require an update on the next tick.
+As it is highly ineffective to schedule hundreds of hoppers for updates, who are not even doing anything, most parts are now event-driven.
+This means, that hoppers will only be scheduled for another block update, if an item entity landed on them or if any update on the blocks or inventories around them occurred. 
 
 ### Customizations
 Customizations can be done in the `config.yml` in the plugin's `plugin_data` folder:
