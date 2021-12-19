@@ -4,6 +4,7 @@ namespace ColinHDev\VanillaHopper\listeners;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
 use pocketmine\block\inventory\BlockInventory;
+use pocketmine\block\inventory\DoubleChestInventory;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
 use pocketmine\math\Facing;
@@ -44,6 +45,15 @@ class InventoryTransactionListener implements Listener {
                     $block = $position->world->getBlock($position->getSide($facing));
                     if ($block instanceof Hopper) {
                         $block->scheduleDelayedBlockUpdate(1);
+                    }
+                }
+                if ($inventory instanceof DoubleChestInventory) {
+                    $position = $inventory->getRightSide()->getHolder();
+                    foreach (self::FACINGS as $facing) {
+                        $block = $position->world->getBlock($position->getSide($facing));
+                        if ($block instanceof Hopper) {
+                            $block->scheduleDelayedBlockUpdate(1);
+                        }
                     }
                 }
             }
