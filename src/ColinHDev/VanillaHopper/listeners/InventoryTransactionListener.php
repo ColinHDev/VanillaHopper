@@ -41,6 +41,9 @@ class InventoryTransactionListener implements Listener {
         foreach ($event->getTransaction()->getInventories() as $inventory) {
             if ($inventory instanceof BlockInventory) {
                 $position = $inventory->getHolder();
+                if (!$position->isValid()) {
+                    continue;
+                }
                 foreach (self::FACINGS as $facing) {
                     $block = $position->world->getBlock($position->getSide($facing));
                     if ($block instanceof Hopper) {
