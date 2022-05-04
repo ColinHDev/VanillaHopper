@@ -4,10 +4,17 @@ namespace ColinHDev\VanillaHopper\entities;
 
 use ColinHDev\VanillaHopper\blocks\BlockDataStorer;
 use ColinHDev\VanillaHopper\blocks\Hopper;
+use pocketmine\entity\Location;
 use pocketmine\entity\object\ItemEntity as PMMPItemEntity;
 use pocketmine\item\Item;
+use pocketmine\nbt\tag\CompoundTag;
 
 class ItemEntity extends PMMPItemEntity {
+
+    public function __construct(Location $location, Item $item, ?CompoundTag $nbt = null) {
+        parent::__construct($location, $item, $nbt);
+        $this->checkForHopper();
+    }
 
     protected function move(float $dx, float $dy, float $dz) : void {
         parent::move($dx, $dy, $dz);
