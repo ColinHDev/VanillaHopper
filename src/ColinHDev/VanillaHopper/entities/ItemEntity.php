@@ -20,16 +20,26 @@ class ItemEntity extends PMMPItemEntity {
                 return;
             }
         }
+        $this->checkForHopper();
+    }
 
+    /**
+     * Checks if this item entity is on or inside a hopper and if so, assigns the entity to the hopper.
+     * @return bool Returns TRUE if a hopper was found and the item entity was assigned to the hopper, FALSE otherwise.
+     */
+    private function checkForHopper() : bool {
+        // Checking the block at the item entity's position.
         $block = $this->location->world->getBlock($this->location);
         if (!$block instanceof Hopper) {
+            // Checking the block below the item entity.
             $block = $this->location->world->getBlock($this->location->down());
             if (!$block instanceof Hopper) {
-                return;
+                return false;
             }
         }
         $block->scheduleDelayedBlockUpdate(0);
         BlockDataStorer::getInstance()->assignEntity($block->getPosition(), $this);
+        return true;
     }
 
     /**
