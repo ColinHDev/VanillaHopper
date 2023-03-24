@@ -29,7 +29,7 @@ class Hopper extends PMMPHopper {
         if (BlockDataStorer::getInstance()->getNextTick($this->position) === null) {
             BlockDataStorer::getInstance()->setNextTick(
                 $this->position,
-                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->world, $this->position, $transferCooldown) + Server::getInstance()->getTick()
+                BlockUpdateScheduler::getInstance()->scheduleDelayedBlockUpdate($this->position->getWorld(), $this->position, $transferCooldown) + Server::getInstance()->getTick()
             );
         }
     }

@@ -40,15 +40,17 @@ class HopperPushListener implements Listener {
      */
     public function onHopperPush(HopperPushEvent $event) : void {
         $position = $event->getBlock()->getPosition();
+        $world = $position->getWorld();
         foreach (self::FACINGS as $facing) {
-            $block = $position->world->getBlock($position->getSide($facing));
+            $block = $world->getBlock($position->getSide($facing));
             if ($block instanceof Hopper) {
                 $block->scheduleDelayedBlockUpdate(1);
             }
         }
         $destination = $event->getDestination()->getPosition();
+        $destinationWorld = $destination->getWorld();
         foreach (self::FACINGS_DESTINATION as $facing) {
-            $block = $destination->world->getBlock($destination->getSide($facing));
+            $block = $destinationWorld->getBlock($destination->getSide($facing));
             if ($block instanceof Hopper) {
                 $block->scheduleDelayedBlockUpdate(1);
             }

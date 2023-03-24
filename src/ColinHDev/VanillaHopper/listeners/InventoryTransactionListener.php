@@ -44,16 +44,18 @@ class InventoryTransactionListener implements Listener {
                 if (!$position->isValid()) {
                     continue;
                 }
+                $world = $position->getWorld();
                 foreach (self::FACINGS as $facing) {
-                    $block = $position->world->getBlock($position->getSide($facing));
+                    $block = $world->getBlock($position->getSide($facing));
                     if ($block instanceof Hopper) {
                         $block->scheduleDelayedBlockUpdate(1);
                     }
                 }
                 if ($inventory instanceof DoubleChestInventory) {
                     $position = $inventory->getRightSide()->getHolder();
+                    $world = $position->getWorld();
                     foreach (self::FACINGS as $facing) {
-                        $block = $position->world->getBlock($position->getSide($facing));
+                        $block = $world->getBlock($position->getSide($facing));
                         if ($block instanceof Hopper) {
                             $block->scheduleDelayedBlockUpdate(1);
                         }

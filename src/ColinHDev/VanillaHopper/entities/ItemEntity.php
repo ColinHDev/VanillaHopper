@@ -36,10 +36,10 @@ class ItemEntity extends PMMPItemEntity {
      */
     private function checkForHopper() : bool {
         // Checking the block at the item entity's position.
-        $block = $this->location->world->getBlock($this->location);
+        $block = $this->location->getWorld()->getBlock($this->location);
         if (!$block instanceof Hopper) {
             // Checking the block below the item entity.
-            $block = $this->location->world->getBlock($this->location->down());
+            $block = $this->location->getWorld()->getBlock($this->location->down());
             if (!$block instanceof Hopper) {
                 return false;
             }

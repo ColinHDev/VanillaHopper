@@ -30,8 +30,9 @@ class BlockItemPickupListener implements Listener {
      */
     public function onBlockItemPickup(BlockItemPickupEvent $event) : void {
         $position = $event->getBlock()->getPosition();
+        $world = $position->getWorld();
         foreach (self::FACINGS as $facing) {
-            $block = $position->world->getBlock($position->getSide($facing));
+            $block = $world->getBlock($position->getSide($facing));
             if ($block instanceof Hopper) {
                 $block->scheduleDelayedBlockUpdate(1);
             }

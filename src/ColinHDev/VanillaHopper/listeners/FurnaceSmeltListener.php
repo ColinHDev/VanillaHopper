@@ -31,8 +31,9 @@ class FurnaceSmeltListener implements Listener {
      */
     public function onFurnaceSmelt(FurnaceSmeltEvent $event) : void {
         $position = $event->getFurnace()->getPosition();
+        $world = $position->getWorld();
         foreach (self::FACINGS as $facing) {
-            $block = $position->world->getBlock($position->getSide($facing));
+            $block = $world->getBlock($position->getSide($facing));
             if ($block instanceof Hopper) {
                 $block->scheduleDelayedBlockUpdate(1);
             }
