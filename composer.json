@@ -1,7 +1,7 @@
 {
 	"name": "colinhdev/vanillahopper",
 	"require": {
-		"pocketmine/pocketmine-mp": "4.11.0"
+		"pocketmine/pocketmine-mp": "5.0.0-BETA1"
 	},
 	"require-dev": {
 		"phpstan/phpstan": "^1.9.2",

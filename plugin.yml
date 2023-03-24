@@ -2,7 +2,7 @@ name: VanillaHopper
 main: ColinHDev\VanillaHopper\VanillaHopper
 version: "2.1.0"
 
-api: 4.11.0
+api: 5.0.0
 
 author: ColinHDev
 website: https://github.com/ColinHDev
