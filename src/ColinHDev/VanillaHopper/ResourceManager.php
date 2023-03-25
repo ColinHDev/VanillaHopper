@@ -4,6 +4,7 @@ namespace ColinHDev\VanillaHopper;
 
 use pocketmine\utils\Config;
 use pocketmine\utils\SingletonTrait;
+use function intval;
 
 class ResourceManager {
     use SingletonTrait;
@@ -16,9 +17,9 @@ class ResourceManager {
         VanillaHopper::getInstance()->saveResource("config.yml");
         $config = new Config(VanillaHopper::getInstance()->getDataFolder() . "config.yml", Config::YAML);
 
-        $this->defaultTransferCooldown = max(1, (int) $config->get("hopper.transferCooldown", 8));
-        $this->itemsPerUpdate = max(1, (int) $config->get("hopper.itemsPerUpdate", 1));
-        $this->updatesPerTick = (int) $config->get("hopper.updatesPerTick", -1);
+        $this->defaultTransferCooldown = max(1, intval($config->get("hopper.transferCooldown", 8)));
+        $this->itemsPerUpdate = max(1, intval($config->get("hopper.itemsPerUpdate", 1)));
+        $this->updatesPerTick = intval($config->get("hopper.updatesPerTick", -1));
     }
 
     public function getDefaultTransferCooldown() : int {

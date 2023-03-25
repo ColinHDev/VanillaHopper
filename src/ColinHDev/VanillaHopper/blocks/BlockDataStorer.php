@@ -20,14 +20,14 @@ final class BlockDataStorer {
     private array $lastTicks = [];
     /** @var array<int, array<int, array<int, int>>> */
     private array $nextTicks = [];
-    /** @var array<int, array<int, array<int, ItemEntity>>> */
+    /** @var array<int, array<int, array<int, ItemEntity[]>>> */
     private array $assignedEntities = [];
 
     /**
      * Returns the tick a hopper received its last update or null if it was never updated since its loading.
      */
     public function getLastTick(Position $position) : ?int {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         if (isset($this->lastTicks[$worldID][$chunkHash][$relativeBlockHash])) {
@@ -40,7 +40,7 @@ final class BlockDataStorer {
      * Set the tick, on which a hopper received its last update.
      */
     public function setLastTick(Position $position, int $lastTick) : void {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         if (!isset($this->lastTicks[$worldID])) {
             $this->lastTicks[$worldID] = [];
         }
@@ -57,7 +57,7 @@ final class BlockDataStorer {
      * update.
      */
     public function getNextTick(Position $position) : ?int {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         if (isset($this->nextTicks[$worldID][$chunkHash][$relativeBlockHash])) {
@@ -71,7 +71,7 @@ final class BlockDataStorer {
      * another update.
      */
     public function setNextTick(Position $position, ?int $nextTick) : void {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         if (!isset($this->nextTicks[$worldID])) {
             $this->nextTicks[$worldID] = [];
         }
@@ -92,7 +92,7 @@ final class BlockDataStorer {
      * @return array<int, ItemEntity>
      */
     public function getAssignedEntities(Position $position) : array {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         if (isset($this->assignedEntities[$worldID][$chunkHash][$relativeBlockHash])) {
@@ -105,7 +105,7 @@ final class BlockDataStorer {
      * Assign an item entity to a block at a specific position.
      */
     public function assignEntity(Position $position, ItemEntity $entity) : void {
-        $world = $position->world;
+        $world = $position->getWorld();
         $worldID = $world->getId();
         if (!isset($this->assignedEntities[$worldID])) {
             $this->assignedEntities[$worldID] = [];
@@ -169,7 +169,7 @@ final class BlockDataStorer {
      * Unassign an item entity from a block at a specific position.
      */
     public function unassignEntity(Position $position, ItemEntity $entity) : void {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         unset($this->assignedEntities[$worldID][$chunkHash][$relativeBlockHash][$entity->getId()]);
@@ -180,7 +180,7 @@ final class BlockDataStorer {
      * Remove a block to remove all data assigned to it, e.g. when the block is broken.
      */
     public function removeBlock(Position $position) : void {
-        $worldID = $position->world->getId();
+        $worldID = $position->getWorld()->getId();
         $chunkHash = World::chunkHash($position->x >> Chunk::COORD_BIT_SIZE, $position->z >> Chunk::COORD_BIT_SIZE);
         $relativeBlockHash = World::chunkBlockHash($position->x & Chunk::COORD_MASK, $position->y & Chunk::COORD_MASK, $position->z & Chunk::COORD_MASK);
         unset($this->lastTicks[$worldID][$chunkHash][$relativeBlockHash]);
