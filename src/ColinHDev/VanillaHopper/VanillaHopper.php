@@ -21,14 +21,14 @@ use pocketmine\entity\EntityFactory;
 use pocketmine\item\Item;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
+use pocketmine\utils\SingletonTrait;
 use pocketmine\world\World;
 
 class VanillaHopper extends PluginBase {
-
-    private static VanillaHopper $instance;
+    use SingletonTrait;
 
     public function onEnable() : void {
-        self::$instance = $this;
+        self::setInstance($this);
 
         RuntimeBlockStateRegistry::getInstance()->register(new Hopper(), true);
 
@@ -60,9 +60,5 @@ class VanillaHopper extends PluginBase {
         $this->getServer()->getPluginManager()->registerEvents(new HopperPushListener(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new InventoryTransactionListener(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new WorldUnloadListener(), $this);
-    }
-
-    public static function getInstance() : VanillaHopper {
-        return self::$instance;
     }
 }
