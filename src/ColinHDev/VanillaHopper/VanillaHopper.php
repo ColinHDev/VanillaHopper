@@ -14,11 +14,8 @@ use ColinHDev\VanillaHopper\listeners\HopperPullListener;
 use ColinHDev\VanillaHopper\listeners\HopperPushListener;
 use ColinHDev\VanillaHopper\listeners\InventoryTransactionListener;
 use ColinHDev\VanillaHopper\listeners\WorldUnloadListener;
-use pocketmine\block\BlockFactory;
-use pocketmine\block\BlockIdentifier;
+use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\tile\TileFactory;
-use pocketmine\block\VanillaBlocks;
-use pocketmine\data\bedrock\EntityLegacyIds;
 use pocketmine\entity\EntityDataHelper;
 use pocketmine\entity\EntityFactory;
 use pocketmine\item\Item;
@@ -33,15 +30,7 @@ class VanillaHopper extends PluginBase {
     public function onEnable() : void {
         self::$instance = $this;
 
-        $oldHopper = VanillaBlocks::HOPPER();
-        BlockFactory::getInstance()->register(
-            new Hopper(
-                new BlockIdentifier($oldHopper->getIdInfo()->getBlockId(), $oldHopper->getIdInfo()->getVariant(), $oldHopper->getIdInfo()->getItemId(), TileHopper::class),
-                $oldHopper->getName(),
-                $oldHopper->getBreakInfo()
-            ),
-            true
-        );
+        RuntimeBlockStateRegistry::getInstance()->register(new Hopper(), true);
 
         TileFactory::getInstance()->register(TileHopper::class, ["Hopper", "minecraft:hopper"]);
 
@@ -59,8 +48,7 @@ class VanillaHopper extends PluginBase {
                 }
                 return new ItemEntity(EntityDataHelper::parseLocation($nbt, $world), $item, $nbt);
             },
-            ['Item', 'minecraft:item'],
-            EntityLegacyIds::ITEM
+            ['Item', 'minecraft:item']
         );
 
         $this->getServer()->getPluginManager()->registerEvents(new BlockItemPickupListener(), $this);

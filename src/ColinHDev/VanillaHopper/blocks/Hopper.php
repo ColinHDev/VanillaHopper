@@ -9,6 +9,7 @@ use ColinHDev\VanillaHopper\events\HopperPushContainerEvent;
 use ColinHDev\VanillaHopper\events\HopperPushJukeboxEvent;
 use ColinHDev\VanillaHopper\ResourceManager;
 use pocketmine\block\Block;
+use pocketmine\block\BlockTypeInfo;
 use pocketmine\block\Hopper as PMMPHopper;
 use pocketmine\block\inventory\FurnaceInventory;
 use pocketmine\block\inventory\HopperInventory;
@@ -16,6 +17,7 @@ use pocketmine\block\Jukebox;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace as TileFurnace;
 use pocketmine\block\tile\Jukebox as TileJukebox;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\event\block\BlockItemPickupEvent;
 use pocketmine\item\Bucket;
 use pocketmine\item\Record;
@@ -24,6 +26,14 @@ use pocketmine\math\Facing;
 use pocketmine\Server;
 
 class Hopper extends PMMPHopper {
+
+    public function __construct() {
+        $oldHopper = VanillaBlocks::HOPPER();
+        parent::__construct(
+            $oldHopper->getIdInfo(),
+            $oldHopper->getName(),
+            new BlockTypeInfo($oldHopper->getBreakInfo(), $oldHopper->getTypeTags()));
+    }
 
     public function scheduleDelayedBlockUpdate(int $transferCooldown) : void {
         if (BlockDataStorer::getInstance()->getNextTick($this->position) === null) {
