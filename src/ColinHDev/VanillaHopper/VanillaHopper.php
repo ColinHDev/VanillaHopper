@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ColinHDev\VanillaHopper;
 
 use ColinHDev\VanillaHopper\blocks\Hopper;
@@ -14,8 +16,11 @@ use ColinHDev\VanillaHopper\listeners\HopperPullListener;
 use ColinHDev\VanillaHopper\listeners\HopperPushListener;
 use ColinHDev\VanillaHopper\listeners\InventoryTransactionListener;
 use ColinHDev\VanillaHopper\listeners\WorldUnloadListener;
+use pocketmine\block\BlockIdentifier;
+use pocketmine\block\BlockTypeInfo;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\tile\TileFactory;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\EntityDataHelper;
 use pocketmine\entity\EntityFactory;
 use pocketmine\item\Item;
@@ -23,6 +28,8 @@ use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\SingletonTrait;
 use pocketmine\world\World;
+use ReflectionClass;
+use function mb_strtoupper;
 
 class VanillaHopper extends PluginBase {
     use SingletonTrait;
@@ -30,7 +37,7 @@ class VanillaHopper extends PluginBase {
     public function onEnable() : void {
         self::setInstance($this);
 
-        RuntimeBlockStateRegistry::getInstance()->register(new Hopper(), true);
+        $this->registerHopperBlock();
 
         TileFactory::getInstance()->register(TileHopper::class, ["Hopper", "minecraft:hopper"]);
 
@@ -60,5 +67,35 @@ class VanillaHopper extends PluginBase {
         $this->getServer()->getPluginManager()->registerEvents(new HopperPushListener(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new InventoryTransactionListener(), $this);
         $this->getServer()->getPluginManager()->registerEvents(new WorldUnloadListener(), $this);
+    }
+
+    private function registerHopperBlock() : void {
+        $oldHopper = VanillaBlocks::HOPPER();
+        $newHopper = new Hopper(
+            new BlockIdentifier($oldHopper->getTypeId(), TileHopper::class),
+            $oldHopper->getName(),
+            new BlockTypeInfo($oldHopper->getBreakInfo(), $oldHopper->getTypeTags())
+        );
+
+        RuntimeBlockStateRegistry::getInstance()->register($newHopper, true);
+
+        $reflection = new ReflectionClass(VanillaBlocks::class);
+        $blocks = $reflection->getStaticPropertyValue("members");
+        $blocks[mb_strtoupper("hopper")] = $newHopper;
+        $reflection->setStaticPropertyValue("members", $blocks);
+
+        /*GlobalBlockStateHandlers::getDeserializer()->map(
+            BlockTypeNames::HOPPER,
+            function(BlockStateReader $in) use($newHopper) : Block {
+                return (clone $newHopper)
+                    ->setFacing($in->readFacingWithoutUp())
+                    ->setPowered($in->readBool(BlockStateNames::TOGGLE_BIT));
+            }
+        );
+        GlobalBlockStateHandlers::getSerializer()->map($newHopper, function(Hopper $block) : BlockStateWriter {
+            return BlockStateWriter::create(BlockTypeNames::HOPPER)
+                ->writeBool(BlockStateNames::TOGGLE_BIT, $block->isPowered())
+                ->writeFacingWithoutUp($block->getFacing());
+        });*/
     }
 }
