@@ -16,6 +16,7 @@ use ColinHDev\VanillaHopper\listeners\HopperPullListener;
 use ColinHDev\VanillaHopper\listeners\HopperPushListener;
 use ColinHDev\VanillaHopper\listeners\InventoryTransactionListener;
 use ColinHDev\VanillaHopper\listeners\WorldUnloadListener;
+use pocketmine\block\Block;
 use pocketmine\block\BlockIdentifier;
 use pocketmine\block\BlockTypeInfo;
 use pocketmine\block\RuntimeBlockStateRegistry;
@@ -77,9 +78,20 @@ class VanillaHopper extends PluginBase {
             new BlockTypeInfo($oldHopper->getBreakInfo(), $oldHopper->getTypeTags())
         );
 
-        RuntimeBlockStateRegistry::getInstance()->register($newHopper, true);
+        /**
+         * Overwriting the entry in the RuntimeBlockStateRegistry by calling our custom version of its 
+         * @see RuntimeBlockStateRegistry::register() method without prohibiting the overwriting of existing entries
+         */
+        (function(Hopper $block) : void {
+            $typeId = $block->getTypeId();
+            $this->typeIndex[$typeId] = clone $block;
+            foreach($block->generateStatePermutations() as $v){
+                $this->fillStaticArrays($v->getStateId(), $v);
+            }
+        })->call(RuntimeBlockStateRegistry::getInstance(), $newHopper);
 
         $reflection = new ReflectionClass(VanillaBlocks::class);
+        /** @var array<string, Block> $blocks */
         $blocks = $reflection->getStaticPropertyValue("members");
         $blocks[mb_strtoupper("hopper")] = $newHopper;
         $reflection->setStaticPropertyValue("members", $blocks);
