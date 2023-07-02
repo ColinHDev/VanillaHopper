@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ColinHDev\VanillaHopper;
 
+use Closure;
 use ColinHDev\VanillaHopper\blocks\Hopper;
 use ColinHDev\VanillaHopper\blocks\tiles\Hopper as TileHopper;
 use ColinHDev\VanillaHopper\entities\ItemEntity;
@@ -22,14 +23,24 @@ use pocketmine\block\BlockTypeInfo;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\tile\TileFactory;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\crafting\CraftingManagerFromDataHelper;
+use pocketmine\data\bedrock\item\ItemDeserializer;
+use pocketmine\data\bedrock\item\ItemSerializer;
+use pocketmine\data\bedrock\item\ItemTypeNames;
+use pocketmine\data\bedrock\item\SavedItemData;
+use pocketmine\data\SavedDataLoadingException;
 use pocketmine\entity\EntityDataHelper;
 use pocketmine\entity\EntityFactory;
+use pocketmine\inventory\CreativeInventory;
 use pocketmine\item\Item;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
+use pocketmine\Server;
 use pocketmine\utils\SingletonTrait;
+use pocketmine\world\format\io\GlobalItemDataHandlers;
 use pocketmine\world\World;
 use ReflectionClass;
+use Symfony\Component\Filesystem\Path;
 use function mb_strtoupper;
 
 class VanillaHopper extends PluginBase {
@@ -45,14 +56,14 @@ class VanillaHopper extends PluginBase {
         EntityFactory::getInstance()->register(
             ItemEntity::class,
             function (World $world, CompoundTag $nbt) : ItemEntity {
-                $itemTag = $nbt->getCompoundTag("Item");
+                $itemTag = $nbt->getCompoundTag(ItemEntity::TAG_ITEM);
                 if($itemTag === null){
-                    throw new \UnexpectedValueException("Expected \"Item\" NBT tag not found");
+                    throw new SavedDataLoadingException("Expected \"" . ItemEntity::TAG_ITEM . "\" NBT tag not found");
                 }
 
                 $item = Item::nbtDeserialize($itemTag);
                 if($item->isNull()){
-                    throw new \UnexpectedValueException("Item is invalid");
+                    throw new SavedDataLoadingException("Item is invalid");
                 }
                 return new ItemEntity(EntityDataHelper::parseLocation($nbt, $world), $item, $nbt);
             },
@@ -93,8 +104,42 @@ class VanillaHopper extends PluginBase {
         $reflection = new ReflectionClass(VanillaBlocks::class);
         /** @var array<string, Block> $blocks */
         $blocks = $reflection->getStaticPropertyValue("members");
-        $blocks[mb_strtoupper("hopper")] = $newHopper;
+        $blocks[mb_strtoupper("hopper")] = clone $newHopper;
         $reflection->setStaticPropertyValue("members", $blocks);
+
+        /**
+         * Overwriting the entry in the ItemDeserializer and ItemSerializer by calling our custom version of their
+         * {@see ItemDeserializer::map()} and {@see ItemSerializer::map()} methods without prohibiting the 
+         * overwriting of existing entries
+         */
+        (function(string $id, Closure $deserializer) : void {
+            $this->deserializers[$id] = $deserializer;
+        })->call(
+            GlobalItemDataHandlers::getDeserializer(), 
+            ItemTypeNames::HOPPER,
+            fn (SavedItemData $data) => $newHopper->asItem()
+        );
+        (function(Block $block, Closure $serializer) : void {
+            $this->blockItemSerializers[$block->getTypeId()] = $serializer;
+        })->call(
+            GlobalItemDataHandlers::getSerializer(),
+            $newHopper,
+            fn() => new SavedItemData(ItemTypeNames::HOPPER)
+        );
+
+        /**
+         * Recreating the creative inventory, so that it includes our custom hopper item instance.
+         */
+        CreativeInventory::reset();
+        CreativeInventory::getInstance();
+
+        /**
+         * Overwriting the servers crafting manager, so that all recipes using the old hopper item are replaced and
+         * use the new hopper item instead.
+         */
+        (function() : void {
+            $this->craftingManager = CraftingManagerFromDataHelper::make(Path::join(\pocketmine\BEDROCK_DATA_PATH, "recipes"));
+        })->call(Server::getInstance());
 
         /*GlobalBlockStateHandlers::getDeserializer()->map(
             BlockTypeNames::HOPPER,
