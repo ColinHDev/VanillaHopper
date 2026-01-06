@@ -264,6 +264,9 @@ class Hopper extends PMMPHopper {
                     } else {
                         $itemToPull = $item->pop($item->getCount());
                     }
+                    if(!$inventory->canAddItem($itemToPull)){
+                        continue;
+                    }
 
                     $event = new HopperPullContainerEvent($this, $inventory, $origin, $originTile->getInventory(), $itemToPull);
                     $event->call();
